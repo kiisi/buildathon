@@ -20,11 +20,23 @@ function DashboardLayout() {
   const currentPath = matches[matches.length - 1]?.fullPath || ''
   const activeNav = currentPath.includes('anonymous-messages')
     ? 'anonymous-message'
-    : 'links'
+    : currentPath.includes('link-shortener')
+      ? 'link-shortener'
+      : currentPath.includes('qr-code')
+        ? 'qr-code'
+        : currentPath.includes('polls')
+          ? 'polls'
+          : 'links'
 
   function handleNavigate(id: string) {
     if (id === 'anonymous-message') {
       navigate({ to: '/dashboard/anonymous-messages' })
+    } else if (id === 'link-shortener') {
+      navigate({ to: '/dashboard/link-shortener' })
+    } else if (id === 'qr-code') {
+      navigate({ to: '/dashboard/qr-code' })
+    } else if (id === 'polls') {
+      navigate({ to: '/dashboard/polls' })
     } else if (id === 'links') {
       navigate({ to: '/dashboard' })
     }

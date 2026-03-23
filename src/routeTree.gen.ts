@@ -16,6 +16,9 @@ import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
 import { Route as OnboardingSelectPlanRouteImport } from './routes/onboarding/select-plan'
 import { Route as OnboardingSelectCategoryRouteImport } from './routes/onboarding/select-category'
 import { Route as OnboardingProTrialRouteImport } from './routes/onboarding/pro-trial'
+import { Route as DashboardQrCodeRouteImport } from './routes/dashboard/qr-code'
+import { Route as DashboardPollsRouteImport } from './routes/dashboard/polls'
+import { Route as DashboardLinkShortenerRouteImport } from './routes/dashboard/link-shortener'
 import { Route as DashboardAnonymousMessagesRouteImport } from './routes/dashboard/anonymous-messages'
 import { Route as AuthUsernameRouteImport } from './routes/auth/username'
 import { Route as AuthRegisterRouteImport } from './routes/auth/register'
@@ -59,6 +62,21 @@ const OnboardingProTrialRoute = OnboardingProTrialRouteImport.update({
   path: '/onboarding/pro-trial',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DashboardQrCodeRoute = DashboardQrCodeRouteImport.update({
+  id: '/qr-code',
+  path: '/qr-code',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardPollsRoute = DashboardPollsRouteImport.update({
+  id: '/polls',
+  path: '/polls',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardLinkShortenerRoute = DashboardLinkShortenerRouteImport.update({
+  id: '/link-shortener',
+  path: '/link-shortener',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const DashboardAnonymousMessagesRoute =
   DashboardAnonymousMessagesRouteImport.update({
     id: '/anonymous-messages',
@@ -101,6 +119,9 @@ export interface FileRoutesByFullPath {
   '/auth/register': typeof AuthRegisterRoute
   '/auth/username': typeof AuthUsernameRoute
   '/dashboard/anonymous-messages': typeof DashboardAnonymousMessagesRoute
+  '/dashboard/link-shortener': typeof DashboardLinkShortenerRoute
+  '/dashboard/polls': typeof DashboardPollsRoute
+  '/dashboard/qr-code': typeof DashboardQrCodeRoute
   '/onboarding/pro-trial': typeof OnboardingProTrialRoute
   '/onboarding/select-category': typeof OnboardingSelectCategoryRoute
   '/onboarding/select-plan': typeof OnboardingSelectPlanRoute
@@ -115,6 +136,9 @@ export interface FileRoutesByTo {
   '/auth/register': typeof AuthRegisterRoute
   '/auth/username': typeof AuthUsernameRoute
   '/dashboard/anonymous-messages': typeof DashboardAnonymousMessagesRoute
+  '/dashboard/link-shortener': typeof DashboardLinkShortenerRoute
+  '/dashboard/polls': typeof DashboardPollsRoute
+  '/dashboard/qr-code': typeof DashboardQrCodeRoute
   '/onboarding/pro-trial': typeof OnboardingProTrialRoute
   '/onboarding/select-category': typeof OnboardingSelectCategoryRoute
   '/onboarding/select-plan': typeof OnboardingSelectPlanRoute
@@ -131,6 +155,9 @@ export interface FileRoutesById {
   '/auth/register': typeof AuthRegisterRoute
   '/auth/username': typeof AuthUsernameRoute
   '/dashboard/anonymous-messages': typeof DashboardAnonymousMessagesRoute
+  '/dashboard/link-shortener': typeof DashboardLinkShortenerRoute
+  '/dashboard/polls': typeof DashboardPollsRoute
+  '/dashboard/qr-code': typeof DashboardQrCodeRoute
   '/onboarding/pro-trial': typeof OnboardingProTrialRoute
   '/onboarding/select-category': typeof OnboardingSelectCategoryRoute
   '/onboarding/select-plan': typeof OnboardingSelectPlanRoute
@@ -148,6 +175,9 @@ export interface FileRouteTypes {
     | '/auth/register'
     | '/auth/username'
     | '/dashboard/anonymous-messages'
+    | '/dashboard/link-shortener'
+    | '/dashboard/polls'
+    | '/dashboard/qr-code'
     | '/onboarding/pro-trial'
     | '/onboarding/select-category'
     | '/onboarding/select-plan'
@@ -162,6 +192,9 @@ export interface FileRouteTypes {
     | '/auth/register'
     | '/auth/username'
     | '/dashboard/anonymous-messages'
+    | '/dashboard/link-shortener'
+    | '/dashboard/polls'
+    | '/dashboard/qr-code'
     | '/onboarding/pro-trial'
     | '/onboarding/select-category'
     | '/onboarding/select-plan'
@@ -177,6 +210,9 @@ export interface FileRouteTypes {
     | '/auth/register'
     | '/auth/username'
     | '/dashboard/anonymous-messages'
+    | '/dashboard/link-shortener'
+    | '/dashboard/polls'
+    | '/dashboard/qr-code'
     | '/onboarding/pro-trial'
     | '/onboarding/select-category'
     | '/onboarding/select-plan'
@@ -248,6 +284,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OnboardingProTrialRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dashboard/qr-code': {
+      id: '/dashboard/qr-code'
+      path: '/qr-code'
+      fullPath: '/dashboard/qr-code'
+      preLoaderRoute: typeof DashboardQrCodeRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/polls': {
+      id: '/dashboard/polls'
+      path: '/polls'
+      fullPath: '/dashboard/polls'
+      preLoaderRoute: typeof DashboardPollsRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/link-shortener': {
+      id: '/dashboard/link-shortener'
+      path: '/link-shortener'
+      fullPath: '/dashboard/link-shortener'
+      preLoaderRoute: typeof DashboardLinkShortenerRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/dashboard/anonymous-messages': {
       id: '/dashboard/anonymous-messages'
       path: '/anonymous-messages'
@@ -295,11 +352,17 @@ declare module '@tanstack/react-router' {
 
 interface DashboardRouteChildren {
   DashboardAnonymousMessagesRoute: typeof DashboardAnonymousMessagesRoute
+  DashboardLinkShortenerRoute: typeof DashboardLinkShortenerRoute
+  DashboardPollsRoute: typeof DashboardPollsRoute
+  DashboardQrCodeRoute: typeof DashboardQrCodeRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
 }
 
 const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardAnonymousMessagesRoute: DashboardAnonymousMessagesRoute,
+  DashboardLinkShortenerRoute: DashboardLinkShortenerRoute,
+  DashboardPollsRoute: DashboardPollsRoute,
+  DashboardQrCodeRoute: DashboardQrCodeRoute,
   DashboardIndexRoute: DashboardIndexRoute,
 }
 
