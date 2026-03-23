@@ -33,7 +33,7 @@ const navSections: { title?: string; items: NavItem[] }[] = [
         icon: <LayoutDashboard size={16} />,
         children: [
           { id: 'links', label: 'Links' },
-          { id: 'shop', label: 'Shop' },
+          // { id: 'shop', label: 'Shop' },
           { id: 'design', label: 'Design' },
         ],
       },

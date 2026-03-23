@@ -28,7 +28,9 @@ function DashboardLayout() {
           ? 'polls'
           : currentPath.includes('insights')
             ? 'insights'
-            : 'links'
+            : currentPath.includes('design')
+              ? 'design'
+              : 'links'
 
   function handleNavigate(id: string) {
     if (id === 'anonymous-message') {
@@ -41,6 +43,8 @@ function DashboardLayout() {
       navigate({ to: '/dashboard/polls' })
     } else if (id === 'insights') {
       navigate({ to: '/dashboard/insights' })
+    } else if (id === 'design') {
+      navigate({ to: '/dashboard/design' })
     } else if (id === 'links') {
       navigate({ to: '/dashboard' })
     }

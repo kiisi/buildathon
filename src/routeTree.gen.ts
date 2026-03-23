@@ -20,6 +20,7 @@ import { Route as DashboardQrCodeRouteImport } from './routes/dashboard/qr-code'
 import { Route as DashboardPollsRouteImport } from './routes/dashboard/polls'
 import { Route as DashboardLinkShortenerRouteImport } from './routes/dashboard/link-shortener'
 import { Route as DashboardInsightsRouteImport } from './routes/dashboard/insights'
+import { Route as DashboardDesignRouteImport } from './routes/dashboard/design'
 import { Route as DashboardAnonymousMessagesRouteImport } from './routes/dashboard/anonymous-messages'
 import { Route as AuthUsernameRouteImport } from './routes/auth/username'
 import { Route as AuthRegisterRouteImport } from './routes/auth/register'
@@ -83,6 +84,11 @@ const DashboardInsightsRoute = DashboardInsightsRouteImport.update({
   path: '/insights',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardDesignRoute = DashboardDesignRouteImport.update({
+  id: '/design',
+  path: '/design',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const DashboardAnonymousMessagesRoute =
   DashboardAnonymousMessagesRouteImport.update({
     id: '/anonymous-messages',
@@ -125,6 +131,7 @@ export interface FileRoutesByFullPath {
   '/auth/register': typeof AuthRegisterRoute
   '/auth/username': typeof AuthUsernameRoute
   '/dashboard/anonymous-messages': typeof DashboardAnonymousMessagesRoute
+  '/dashboard/design': typeof DashboardDesignRoute
   '/dashboard/insights': typeof DashboardInsightsRoute
   '/dashboard/link-shortener': typeof DashboardLinkShortenerRoute
   '/dashboard/polls': typeof DashboardPollsRoute
@@ -143,6 +150,7 @@ export interface FileRoutesByTo {
   '/auth/register': typeof AuthRegisterRoute
   '/auth/username': typeof AuthUsernameRoute
   '/dashboard/anonymous-messages': typeof DashboardAnonymousMessagesRoute
+  '/dashboard/design': typeof DashboardDesignRoute
   '/dashboard/insights': typeof DashboardInsightsRoute
   '/dashboard/link-shortener': typeof DashboardLinkShortenerRoute
   '/dashboard/polls': typeof DashboardPollsRoute
@@ -163,6 +171,7 @@ export interface FileRoutesById {
   '/auth/register': typeof AuthRegisterRoute
   '/auth/username': typeof AuthUsernameRoute
   '/dashboard/anonymous-messages': typeof DashboardAnonymousMessagesRoute
+  '/dashboard/design': typeof DashboardDesignRoute
   '/dashboard/insights': typeof DashboardInsightsRoute
   '/dashboard/link-shortener': typeof DashboardLinkShortenerRoute
   '/dashboard/polls': typeof DashboardPollsRoute
@@ -184,6 +193,7 @@ export interface FileRouteTypes {
     | '/auth/register'
     | '/auth/username'
     | '/dashboard/anonymous-messages'
+    | '/dashboard/design'
     | '/dashboard/insights'
     | '/dashboard/link-shortener'
     | '/dashboard/polls'
@@ -202,6 +212,7 @@ export interface FileRouteTypes {
     | '/auth/register'
     | '/auth/username'
     | '/dashboard/anonymous-messages'
+    | '/dashboard/design'
     | '/dashboard/insights'
     | '/dashboard/link-shortener'
     | '/dashboard/polls'
@@ -221,6 +232,7 @@ export interface FileRouteTypes {
     | '/auth/register'
     | '/auth/username'
     | '/dashboard/anonymous-messages'
+    | '/dashboard/design'
     | '/dashboard/insights'
     | '/dashboard/link-shortener'
     | '/dashboard/polls'
@@ -324,6 +336,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardInsightsRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard/design': {
+      id: '/dashboard/design'
+      path: '/design'
+      fullPath: '/dashboard/design'
+      preLoaderRoute: typeof DashboardDesignRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/dashboard/anonymous-messages': {
       id: '/dashboard/anonymous-messages'
       path: '/anonymous-messages'
@@ -371,6 +390,7 @@ declare module '@tanstack/react-router' {
 
 interface DashboardRouteChildren {
   DashboardAnonymousMessagesRoute: typeof DashboardAnonymousMessagesRoute
+  DashboardDesignRoute: typeof DashboardDesignRoute
   DashboardInsightsRoute: typeof DashboardInsightsRoute
   DashboardLinkShortenerRoute: typeof DashboardLinkShortenerRoute
   DashboardPollsRoute: typeof DashboardPollsRoute
@@ -380,6 +400,7 @@ interface DashboardRouteChildren {
 
 const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardAnonymousMessagesRoute: DashboardAnonymousMessagesRoute,
+  DashboardDesignRoute: DashboardDesignRoute,
   DashboardInsightsRoute: DashboardInsightsRoute,
   DashboardLinkShortenerRoute: DashboardLinkShortenerRoute,
   DashboardPollsRoute: DashboardPollsRoute,
