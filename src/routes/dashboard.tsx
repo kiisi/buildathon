@@ -26,7 +26,9 @@ function DashboardLayout() {
         ? 'qr-code'
         : currentPath.includes('polls')
           ? 'polls'
-          : 'links'
+          : currentPath.includes('insights')
+            ? 'insights'
+            : 'links'
 
   function handleNavigate(id: string) {
     if (id === 'anonymous-message') {
@@ -37,6 +39,8 @@ function DashboardLayout() {
       navigate({ to: '/dashboard/qr-code' })
     } else if (id === 'polls') {
       navigate({ to: '/dashboard/polls' })
+    } else if (id === 'insights') {
+      navigate({ to: '/dashboard/insights' })
     } else if (id === 'links') {
       navigate({ to: '/dashboard' })
     }
