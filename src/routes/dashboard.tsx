@@ -1,6 +1,5 @@
 import { createFileRoute, Outlet, useNavigate, useMatches } from '@tanstack/react-router'
 import Sidebar from '../components/dashboard/Sidebar'
-import TopBanner from '../components/dashboard/TopBanner'
 import {
   TreePine,
   Sparkles,
@@ -52,9 +51,6 @@ function DashboardLayout() {
 
   return (
     <div className="flex h-dvh flex-col overflow-hidden bg-gray-50/60">
-      {/* Top banner */}
-      <TopBanner />
-
       {/* Main layout: sidebar + content */}
       <div className="flex min-h-0 flex-1">
         {/* Sidebar — hidden on mobile */}

@@ -140,7 +140,7 @@ export function InsightsPage() {
   const [timeRange, setTimeRange] = useState('Last 30 days')
 
   return (
-    <div className="flex-1 px-6 py-6 sm:px-10 lg:px-12 bg-gray-50/30">
+    <div className="flex-1 px-6 pt-6 pb-12 sm:px-10 lg:px-12 bg-gray-50/30">
       {/* ─── Header ─── */}
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-2.5">

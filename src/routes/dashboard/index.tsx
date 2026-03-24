@@ -35,7 +35,7 @@ const socialLinks = [
 function DashboardLinksPage() {
   return (
     <>
-      <div className="flex-1 px-6 py-6 sm:px-10 lg:px-12">
+      <div className="flex-1 px-6 pt-6 pb-12 sm:px-10 lg:px-12">
         {/* Header */}
         <div className="mb-6 flex items-center justify-between">
           <h1 className="text-2xl font-extrabold tracking-tight text-gray-900">Links</h1>
@@ -133,7 +133,7 @@ function DashboardLinksPage() {
       </div>
 
       {/* Live preview — hidden on tablet and below */}
-      <div className="hidden border-l border-gray-100 bg-white p-6 xl:block">
+      <div className="hidden border-l border-gray-100 bg-white p-6 pb-12 overflow-y-auto xl:block">
         <LivePreview username="devkiisi" displayName="Kiisi" />
       </div>
     </>

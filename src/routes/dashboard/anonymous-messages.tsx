@@ -6,7 +6,6 @@ import {
   Share2,
   Trash2,
   MessageSquare,
-  Clock,
   Link2,
   Check,
   Heart,
@@ -110,7 +109,7 @@ function AnonMessagesPage() {
   }
 
   return (
-    <div className="flex-1 px-4 py-6 sm:px-10 lg:px-12 mx-auto max-w-2xl w-full">
+    <div className="flex-1 px-4 pt-6 pb-12 sm:px-10 lg:px-12 mx-auto max-w-2xl w-full">
       {/* Header */}
       <div className="mb-8 flex flex-col gap-5">
         <div className="flex items-center justify-between">
@@ -133,7 +132,7 @@ function AnonMessagesPage() {
           className="flex cursor-pointer items-center justify-between rounded-xl bg-gray-50 p-3 transition-all hover:bg-gray-100 border border-gray-100"
         >
           <div className="flex items-center gap-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white shadow-sm">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white">
               <Link2 size={16} className="text-pink-500" />
             </div>
             <span className="text-sm font-semibold text-gray-700">{shareLink}</span>
@@ -144,7 +143,7 @@ function AnonMessagesPage() {
               <span className="text-xs font-bold">Copied</span>
             </div>
           ) : (
-            <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-white border border-gray-200 text-gray-500 shadow-sm">
+            <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-white border border-gray-200 text-gray-500">
               <Copy size={14} />
               <span className="text-xs font-bold">Copy</span>
             </div>
@@ -163,7 +162,7 @@ function AnonMessagesPage() {
             onClick={() => setFilter(tab.key)}
             className={`flex-1 sm:flex-none cursor-pointer rounded-lg border-none px-6 py-2.5 font-sans text-sm font-bold transition-all ${
               filter === tab.key
-                ? 'bg-white text-gray-900 shadow-sm'
+                ? 'bg-white text-gray-900'
                 : 'bg-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'
             }`}
           >
@@ -181,11 +180,11 @@ function AnonMessagesPage() {
                 /* Unread Message State */
                 <div
                   onClick={() => handleRead(msg.id)}
-                  className="flex cursor-pointer items-center justify-between rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-100 transition-all hover:shadow-md hover:ring-pink-100 active:scale-[0.98]"
+                  className="flex cursor-pointer items-center justify-between rounded-2xl bg-white p-4 ring-1 ring-gray-100 transition-all hover:ring-pink-100 active:scale-[0.98]"
                 >
                   <div className="flex items-center gap-4">
                     <div
-                      className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br ${msg.theme} shadow-inner cursor-pointer`}
+                      className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br ${msg.theme} cursor-pointer`}
                     >
                       <Mail className="text-white" size={22} strokeWidth={2.5} />
                     </div>
@@ -204,7 +203,7 @@ function AnonMessagesPage() {
                 </div>
               ) : (
                 /* Read Message State */
-                <div className="group rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-100 transition-all hover:ring-gray-200">
+                <div className="group rounded-2xl bg-white p-5 ring-1 ring-gray-100 transition-all hover:ring-gray-200">
                   <div className="mb-4 flex items-center gap-3">
                     <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-100">
                       <Mail size={14} className="text-gray-500" />
@@ -252,7 +251,7 @@ function AnonMessagesPage() {
         ) : (
           /* Empty state */
           <div className="flex flex-col items-center justify-center py-20 px-4 text-center">
-            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-pink-50 shadow-inner">
+            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-pink-50">
               <MessageSquare size={28} className="text-pink-500" strokeWidth={2} />
             </div>
             <h3 className="mb-2 text-lg font-extrabold text-gray-900 tracking-tight">Your inbox is empty</h3>
@@ -261,7 +260,7 @@ function AnonMessagesPage() {
             </p>
             <button
               onClick={handleCopyLink}
-              className="flex cursor-pointer items-center gap-2 rounded-xl bg-gray-900 px-6 py-3 font-sans text-sm font-bold text-white transition-all hover:bg-gray-800 active:scale-[0.98] shadow-md shadow-gray-900/20"
+              className="flex cursor-pointer items-center gap-2 rounded-xl bg-gray-900 px-6 py-3 font-sans text-sm font-bold text-white transition-all hover:bg-gray-800 active:scale-[0.98]"
             >
               <Copy size={16} />
               Copy your link

@@ -251,11 +251,11 @@ function PollsPage() {
 
   /* ── Render ─────────────────────────────────────── */
   return (
-    <div className="flex-1 px-6 py-6 sm:px-10 lg:px-12">
+    <div className="flex-1 px-6 pt-6 pb-12 sm:px-10 lg:px-12">
       {/* ─── Header ─── */}
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-2.5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-orange-400 to-rose-500 shadow-md shadow-orange-400/20">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#1069f9]">
             <BarChart size={17} className="text-white" />
           </div>
           <div>
@@ -270,7 +270,7 @@ function PollsPage() {
 
         <button
           onClick={() => setShowCreate(true)}
-          className="flex w-fit cursor-pointer items-center gap-2 rounded-full bg-gradient-to-r from-orange-400 to-rose-500 px-5 py-2.5 font-sans text-xs font-bold text-white shadow-md shadow-orange-400/20 transition-all hover:shadow-lg hover:shadow-orange-400/25 active:scale-[0.98]"
+          className="flex w-fit cursor-pointer items-center gap-2 rounded-full bg-[#1069f9] px-5 py-2.5 font-sans text-xs font-bold text-white transition-all hover:bg-[#0b5ad4] active:scale-[0.98]"
         >
           <Plus size={15} strokeWidth={2.5} />
           Create Poll
@@ -284,27 +284,27 @@ function PollsPage() {
             label: 'Total Polls',
             value: polls.length,
             icon: <BarChart3 size={16} />,
-            color: 'text-orange-500',
-            bg: 'bg-orange-500/8',
+            color: 'text-[#1069f9]',
+            bg: 'bg-[#1069f9]/10',
           },
           {
             label: 'Total Responses',
             value: totalResponses.toLocaleString(),
             icon: <Users size={16} />,
-            color: 'text-rose-500',
-            bg: 'bg-rose-500/8',
+            color: 'text-purple-500',
+            bg: 'bg-purple-500/10',
           },
           {
             label: 'Active Polls',
             value: activeCount,
             icon: <TrendingUp size={16} />,
             color: 'text-emerald-500',
-            bg: 'bg-emerald-500/8',
+            bg: 'bg-emerald-500/10',
           },
         ].map((stat) => (
           <div
             key={stat.label}
-            className="group flex items-center gap-3.5 rounded-xl border border-gray-100 bg-white p-4 transition-all hover:border-gray-200 hover:shadow-sm"
+            className="group flex items-center gap-3.5 rounded-xl border border-gray-100 bg-white p-4 transition-all hover:border-gray-200"
           >
             <div
               className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${stat.bg} ${stat.color} transition-transform group-hover:scale-105`}
@@ -331,11 +331,11 @@ function PollsPage() {
           />
 
           {/* Modal */}
-          <div className="relative z-10 w-full max-w-lg rounded-2xl border border-gray-100 bg-white shadow-2xl">
+          <div className="relative z-10 w-full max-w-lg rounded-2xl border border-gray-100 bg-white">
             {/* Modal header */}
             <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
               <div className="flex items-center gap-2">
-                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-orange-400 to-rose-500">
+                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#1069f9]">
                   <Sparkles size={13} className="text-white" />
                 </div>
                 <h2 className="text-sm font-bold text-gray-900">Create New Poll</h2>
@@ -364,7 +364,7 @@ function PollsPage() {
                       onClick={() => setNewType(t.key)}
                       className={`flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-xl border px-3 py-2.5 font-sans text-xs font-semibold transition-all ${
                         newType === t.key
-                          ? 'border-orange-300 bg-orange-50/60 text-orange-600 shadow-sm'
+                          ? 'border-[#1069f9]/30 bg-[#1069f9]/5 text-[#1069f9]'
                           : 'border-gray-200 bg-transparent text-gray-500 hover:border-gray-300 hover:bg-gray-50'
                       }`}
                     >
@@ -383,7 +383,7 @@ function PollsPage() {
                   value={newQuestion}
                   onChange={(e) => setNewQuestion(e.target.value)}
                   placeholder="Ask your audience something…"
-                  className="h-12 w-full rounded-xl border border-gray-200 bg-gray-50/60 px-4 font-sans text-sm text-gray-800 outline-none transition-all placeholder:text-gray-300 focus:border-orange-300 focus:bg-white focus:ring-2 focus:ring-orange-500/10"
+                  className="h-12 w-full rounded-xl border border-gray-200 bg-gray-50/60 px-4 font-sans text-sm text-gray-800 outline-none transition-all placeholder:text-gray-300 focus:border-[#1069f9]/50 focus:bg-white focus:ring-2 focus:ring-[#1069f9]/10"
                 />
               </div>
 
@@ -402,7 +402,7 @@ function PollsPage() {
                           value={opt}
                           onChange={(e) => handleUpdateOption(idx, e.target.value)}
                           placeholder={`Option ${idx + 1}`}
-                          className="h-10 flex-1 rounded-lg border border-gray-200 bg-gray-50/60 px-3 font-sans text-sm text-gray-800 outline-none transition-all placeholder:text-gray-300 focus:border-orange-300 focus:bg-white"
+                          className="h-10 flex-1 rounded-lg border border-gray-200 bg-gray-50/60 px-3 font-sans text-sm text-gray-800 outline-none transition-all placeholder:text-gray-300 focus:border-[#1069f9]/50 focus:bg-white"
                         />
                         {newOptions.length > 2 && (
                           <button
@@ -418,7 +418,7 @@ function PollsPage() {
                   {newOptions.length < 8 && (
                     <button
                       onClick={handleAddOption}
-                      className="mt-2 flex cursor-pointer items-center gap-1 border-none bg-transparent p-0 font-sans text-xs font-medium text-orange-500 transition-colors hover:text-orange-600"
+                      className="mt-2 flex cursor-pointer items-center gap-1 border-none bg-transparent p-0 font-sans text-xs font-medium text-[#1069f9] transition-colors hover:text-[#0b5ad4]"
                     >
                       <Plus size={12} />
                       Add option
@@ -460,7 +460,7 @@ function PollsPage() {
                   !newQuestion.trim() ||
                   (newType !== 'rating' && newOptions.filter((o) => o.trim()).length < 2)
                 }
-                className="flex h-10 cursor-pointer items-center gap-2 rounded-xl bg-gradient-to-r from-orange-400 to-rose-500 px-5 font-sans text-xs font-bold text-white shadow-md shadow-orange-400/20 transition-all hover:shadow-lg active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
+                className="flex h-10 cursor-pointer items-center gap-2 rounded-xl bg-[#1069f9] px-5 font-sans text-xs font-bold text-white transition-all hover:bg-[#0b5ad4] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40"
               >
                 <Send size={13} />
                 Publish Poll
@@ -483,7 +483,7 @@ function PollsPage() {
             onClick={() => setFilter(tab.key)}
             className={`cursor-pointer rounded-md border-none px-3.5 py-1.5 font-sans text-xs font-semibold transition-all ${
               filter === tab.key
-                ? 'bg-white text-gray-900 shadow-sm'
+                ? 'bg-white text-gray-900'
                 : 'bg-transparent text-gray-500 hover:text-gray-700'
             }`}
           >
@@ -503,7 +503,7 @@ function PollsPage() {
             return (
               <div
                 key={poll.id}
-                className="group overflow-hidden rounded-2xl border border-gray-100 bg-white transition-all hover:border-gray-200 hover:shadow-sm"
+                className="group overflow-hidden rounded-2xl border border-gray-100 bg-white transition-all hover:border-gray-200"
               >
                 {/* Poll header (always visible) */}
                 <div
@@ -514,10 +514,10 @@ function PollsPage() {
                   <div
                     className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
                       poll.type === 'poll'
-                        ? 'bg-orange-500/8 text-orange-500'
+                        ? 'bg-[#1069f9]/10 text-[#1069f9]'
                         : poll.type === 'rating'
-                          ? 'bg-amber-500/8 text-amber-500'
-                          : 'bg-rose-500/8 text-rose-500'
+                          ? 'bg-amber-500/10 text-amber-500'
+                          : 'bg-purple-500/10 text-purple-500'
                     }`}
                   >
                     {getTypeIcon(poll.type)}
@@ -585,7 +585,7 @@ function PollsPage() {
                                 </span>
                                 <span
                                   className={`min-w-[36px] text-right text-[11px] font-bold ${
-                                    isLeading ? 'text-orange-500' : 'text-gray-400'
+                                    isLeading ? 'text-[#1069f9]' : 'text-gray-400'
                                   }`}
                                 >
                                   {pct}%
@@ -596,7 +596,7 @@ function PollsPage() {
                               <div
                                 className={`h-full rounded-full transition-all duration-700 ease-out ${
                                   isLeading
-                                    ? 'bg-gradient-to-r from-orange-400 to-rose-500'
+                                    ? 'bg-[#1069f9]'
                                     : 'bg-gray-300'
                                 }`}
                                 style={{ width: `${pct}%` }}
@@ -683,10 +683,10 @@ function PollsPage() {
         /* ── Empty state ── */
         <div className="flex flex-col items-center justify-center py-20">
           <div className="relative mb-5">
-            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-400/10 to-rose-500/5">
-              <BarChart size={28} className="text-orange-500" />
+            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[#1069f9]/10">
+              <BarChart size={28} className="text-[#1069f9]" />
             </div>
-            <div className="absolute -right-1 -top-1 flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-r from-orange-400 to-rose-500 shadow-lg shadow-orange-400/30">
+            <div className="absolute -right-1 -top-1 flex h-6 w-6 items-center justify-center rounded-full bg-[#1069f9]">
               <Plus size={12} className="text-white" />
             </div>
           </div>
@@ -698,7 +698,7 @@ function PollsPage() {
           </p>
           <button
             onClick={() => setShowCreate(true)}
-            className="flex cursor-pointer items-center gap-2 rounded-full bg-gradient-to-r from-orange-400 to-rose-500 px-5 py-2.5 font-sans text-xs font-bold text-white shadow-md shadow-orange-400/20 transition-all hover:shadow-lg active:scale-[0.98]"
+            className="flex cursor-pointer items-center gap-2 rounded-full bg-[#1069f9] px-5 py-2.5 font-sans text-xs font-bold text-white transition-all hover:bg-[#0b5ad4] active:scale-[0.98]"
           >
             <Plus size={14} strokeWidth={2.5} />
             Create your first poll
@@ -717,3 +717,4 @@ function PollsPage() {
     </div>
   )
 }
+

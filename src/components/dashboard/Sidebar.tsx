@@ -33,19 +33,19 @@ const navSections: { title?: string; items: NavItem[] }[] = [
         icon: <LayoutDashboard size={16} />,
         children: [
           { id: 'links', label: 'Links' },
-          // { id: 'shop', label: 'Shop' },
           { id: 'design', label: 'Design' },
+          // { id: 'shop', label: 'Shop' },
         ],
       },
       // { id: 'earn', label: 'Earn', icon: <Wallet size={16} />, badge: '$0.00' },
       // { id: 'audience', label: 'Audience', icon: <Users size={16} /> },
-      { id: 'insights', label: 'Insights', icon: <BarChart3 size={16} /> },
+      // { id: 'insights', label: 'Insights', icon: <BarChart3 size={16} /> },
     ],
   },
   {
     title: 'Tools',
     items: [
-      { id: 'anonymous-message', label: 'Anonymous Message', icon: <EyeOff size={16} /> },
+      // { id: 'anonymous-message', label: 'Anonymous Message', icon: <EyeOff size={16} /> },
       { id: 'link-shortener', label: 'Link shortener', icon: <Link2 size={16} /> },
       { id: 'qr-code', label: 'QR Code Generator', icon: <QrCode size={16} /> },
       { id: 'polls', label: 'Polls & Feedback', icon: <BarChart size={16} /> },

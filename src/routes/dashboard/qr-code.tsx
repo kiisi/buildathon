@@ -348,7 +348,7 @@ function QrCodePage() {
 
   /* ── Render ───────────────────────────────────────── */
   return (
-    <div className="flex-1 px-6 py-6 sm:px-10 lg:px-12">
+    <div className="flex-1 px-6 pt-6 pb-12 sm:px-10 lg:px-12">
       {/* ─── Header ─── */}
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-2.5">
@@ -543,7 +543,7 @@ function QrCodePage() {
           </div>
 
           {/* ─── Right: Preview ─── */}
-          <div className="xl:w-[340px]">
+          <div className="xl:w-[340px] pb-12">
             <div className="sticky top-6 flex flex-col items-center rounded-2xl border border-gray-100 bg-white p-6">
               <p className="mb-4 text-xs font-bold text-gray-700">Live Preview</p>
 

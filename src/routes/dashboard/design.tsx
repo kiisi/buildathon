@@ -2,9 +2,8 @@ import { createFileRoute } from '@tanstack/react-router'
 import { useState, useEffect } from 'react'
 import LivePreview from '../../components/dashboard/LivePreview'
 import {
-  Sparkles, Upload, User, Palette, ImageIcon, Type, LayoutTemplate,
-  Check, Shapes, X, Eye, Phone, Monitor, ChevronRight, Settings2, Hash,
-  AlignLeft, AlignCenter
+  Sparkles, Upload, User, ImageIcon, Type, LayoutTemplate,
+  Check, Shapes, X, Eye, Phone, Monitor, Settings2, Hash
 } from 'lucide-react'
 
 export const Route = createFileRoute('/dashboard/design')({
@@ -464,7 +463,7 @@ export function DesignPage() {
       </div>
 
       {/* ─── Right Live Preview (Desktop) ─── */}
-      <div className="hidden xl:flex w-[400px] shrink-0 border-l border-gray-100 bg-white flex-col items-center px-8 relative overflow-hidden h-full">
+      <div className="hidden xl:flex w-[400px] shrink-0 border-l border-gray-100 bg-white flex-col items-center px-8 relative overflow-y-auto pb-12 h-full">
         {/* Decorative background blur for preview area like modern editors do */}
         <div className="absolute top-0 w-full h-40 bg-gradient-to-b from-gray-50 to-transparent pointer-events-none"></div>
 
