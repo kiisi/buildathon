@@ -112,7 +112,7 @@ export function DesignPage() {
                     onClick={() => setActiveTab(tab.id)}
                     className={`flex whitespace-nowrap cursor-pointer items-center gap-2 rounded-full px-4 py-2 text-[13px] font-bold transition-all ${
                       isActive
-                        ? 'bg-gray-900 text-white shadow-md'
+                        ? 'bg-gray-900 text-white'
                         : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'
                     }`}
                   >
@@ -132,7 +132,7 @@ export function DesignPage() {
           {activeTab === 'profile' && (
             <div className="flex max-w-2xl flex-col gap-8 mx-auto animate-in slide-in-from-bottom-2 fade-in duration-300">
               
-              <section className="rounded-3xl border border-gray-100 bg-white p-6 md:p-8 shadow-sm">
+              <section className="rounded-3xl border border-gray-100 bg-white p-6 md:p-8">
                 <h3 className="mb-6 text-sm font-bold text-gray-900">Profile Image</h3>
                 <div className="flex items-center gap-6">
                   <div className="relative group flex h-24 w-24 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-full border-2 border-dashed border-gray-300 bg-gray-50 transition-all hover:border-indigo-400">
@@ -150,7 +150,7 @@ export function DesignPage() {
                 </div>
               </section>
 
-              <section className="rounded-3xl border border-gray-100 bg-white p-6 md:p-8 shadow-sm">
+              <section className="rounded-3xl border border-gray-100 bg-white p-6 md:p-8">
                 <h3 className="mb-6 text-sm font-bold text-gray-900">Profile Details</h3>
                 
                 <div className="mb-6">
@@ -192,7 +192,7 @@ export function DesignPage() {
                       type="text"
                       value={profileTitle}
                       onChange={(e) => setProfileTitle(e.target.value)}
-                      className="h-12 w-full rounded-xl border border-gray-200 bg-white px-4 font-sans text-sm font-semibold text-gray-900 outline-none transition-all focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 shadow-sm"
+                      className="h-12 w-full rounded-xl border border-gray-200 bg-white px-4 font-sans text-sm font-semibold text-gray-900 outline-none transition-all focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10"
                     />
                   </div>
                   <div>
@@ -201,7 +201,7 @@ export function DesignPage() {
                       rows={3}
                       value={profileBio}
                       onChange={(e) => setProfileBio(e.target.value)}
-                      className="w-full resize-none rounded-xl border border-gray-200 bg-white p-4 font-sans text-sm font-semibold text-gray-900 outline-none transition-all focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 shadow-sm"
+                      className="w-full resize-none rounded-xl border border-gray-200 bg-white p-4 font-sans text-sm font-semibold text-gray-900 outline-none transition-all focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10"
                     />
                   </div>
                 </div>
@@ -250,7 +250,7 @@ export function DesignPage() {
                         <div className="absolute inset-0 border-4 border-gray-900 rounded-2xl pointer-events-none"></div>
                       )}
                       {activeTheme === theme.id && (
-                        <div className="absolute top-2 right-2 h-5 w-5 rounded-full bg-gray-900 flex items-center justify-center text-white shadow-sm">
+                        <div className="absolute top-2 right-2 h-5 w-5 rounded-full bg-gray-900 flex items-center justify-center text-white">
                           <Check size={12} strokeWidth={3} />
                         </div>
                       )}
@@ -267,7 +267,7 @@ export function DesignPage() {
           {/* Backgrounds Tab */}
           {activeTab === 'background' && (
             <div className="max-w-2xl mx-auto flex flex-col gap-8 animate-in slide-in-from-bottom-2 fade-in duration-300">
-              <section className="rounded-3xl border border-gray-100 bg-white p-6 md:p-8 shadow-sm">
+              <section className="rounded-3xl border border-gray-100 bg-white p-6 md:p-8">
                 <div className="mb-6 flex rounded-xl bg-gray-100 p-1 w-full">
                   {[
                     { id: 'color', label: 'Flat Color' },
@@ -279,7 +279,7 @@ export function DesignPage() {
                       key={opt.id}
                       onClick={() => setBgType(opt.id as any)}
                       className={`flex-1 cursor-pointer rounded-lg border-none py-2 text-xs font-bold transition-all ${
-                        bgType === opt.id ? 'bg-white text-gray-900 shadow-sm' : 'bg-transparent text-gray-500 hover:text-gray-900'
+                        bgType === opt.id ? 'bg-white text-gray-900' : 'bg-transparent text-gray-500 hover:text-gray-900'
                       }`}
                     >
                       {opt.label}
@@ -305,7 +305,7 @@ export function DesignPage() {
                     
                     <label className="mb-3 block text-xs font-bold text-gray-700">Custom Color</label>
                     <div className="flex items-center gap-4">
-                      <div className="relative h-12 w-20 overflow-hidden rounded-xl border border-gray-200 shadow-sm cursor-pointer">
+                      <div className="relative h-12 w-20 overflow-hidden rounded-xl border border-gray-200 cursor-pointer">
                         <input
                           type="color"
                           value={bgColor}
@@ -323,7 +323,7 @@ export function DesignPage() {
 
                 {bgType === 'image' && (
                   <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-gray-300 bg-gray-50 py-12 transition-colors hover:border-indigo-400 hover:bg-indigo-50/30 cursor-pointer animate-in fade-in">
-                    <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-white shadow-sm border border-gray-100">
+                    <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-white border border-gray-100">
                       <Upload size={24} className="text-indigo-500" />
                     </div>
                     <p className="text-sm font-bold text-gray-900">Click to upload an image</p>
@@ -347,7 +347,7 @@ export function DesignPage() {
           {/* Buttons Tab */}
           {activeTab === 'buttons' && (
             <div className="max-w-2xl mx-auto flex flex-col gap-8 animate-in slide-in-from-bottom-2 fade-in duration-300">
-              <section className="rounded-3xl border border-gray-100 bg-white p-6 md:p-8 shadow-sm">
+              <section className="rounded-3xl border border-gray-100 bg-white p-6 md:p-8">
                 
                 <div className="mb-8">
                   <label className="mb-4 block text-xs font-bold text-gray-900">Button Shape</label>

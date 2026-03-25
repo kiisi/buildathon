@@ -1,82 +1,151 @@
 import { useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
+import { createServerFn } from '@tanstack/react-start'
+import { z } from 'zod'
 import LinkCard from '../../components/dashboard/LinkCard'
 import LivePreview from '../../components/dashboard/LivePreview'
+import connectToDatabase from '../../lib/db'
+import { getSession } from '../../lib/session'
+import LinkModel from '../../models/Link'
 import {
-  Sparkles,
-  Settings,
-  Plus,
-  FolderOpen,
-  Archive,
-  ChevronRight,
-  User,
-  Instagram,
-  MessageCircle,
-  Youtube,
-  Music,
-  Ghost,
-  Twitch,
-  TreePine,
-  Globe,
-  Link2,
+  Sparkles, Settings, Plus, FolderOpen,
+  Archive, ChevronRight, User, Globe,
+  Instagram, Youtube, Twitch, Link2, TreePine,
 } from 'lucide-react'
 
-export const Route = createFileRoute('/dashboard/')({
-  component: DashboardLinksPage,
-})
+// ── Types ────────────────────────────────────────────────────────────────────
 
-const socialLinks = [
-  { title: 'Instagram', icon: <Instagram size={16} />, enabled: false },
-  { title: 'WhatsApp', icon: <MessageCircle size={16} />, enabled: false },
-  { title: 'YouTube', icon: <Youtube size={16} />, enabled: false },
-  { title: 'Spotify', icon: <Music size={16} />, enabled: true },
-  { title: 'Snapchat', icon: <Ghost size={16} />, enabled: false },
-  { title: 'Twitch', icon: <Twitch size={16} />, enabled: false },
-]
-
-type LinkItem = {
+export type LinkItem = {
   id: string
   title: string
   url: string
-  icon?: React.ReactNode
   enabled: boolean
+  order: number
   clicks: number
 }
 
-function DashboardLinksPage() {
-  const [links, setLinks] = useState<LinkItem[]>(() => 
-    socialLinks.map((l, i) => ({
-      id: String(i + 1),
-      title: l.title,
-      url: '',
-      icon: l.icon,
-      enabled: l.enabled,
-      clicks: Math.floor(Math.random() * 100)
-    }))
+// ── Server Functions ─────────────────────────────────────────────────────────
+
+const getLinksFn = createServerFn().handler(async () => {
+  const session = await getSession()
+  if (!session) throw new Error('Unauthorized')
+  await connectToDatabase()
+  const links = await LinkModel.find({ userId: session.userId }).sort({ order: 1 }).lean()
+  return links.map((l: any) => ({
+    id: String(l._id),
+    title: l.title,
+    url: l.url,
+    enabled: l.enabled,
+    order: l.order,
+    clicks: l.clicks,
+  }))
+})
+
+const addLinkFn = createServerFn({ method: 'POST' }).handler(async () => {
+  const session = await getSession()
+  if (!session) throw new Error('Unauthorized')
+  await connectToDatabase()
+  const count = await LinkModel.countDocuments({ userId: session.userId })
+  const link = await LinkModel.create({
+    userId: session.userId,
+    title: '',
+    url: '',
+    enabled: true,
+    order: count,
+    clicks: 0,
+  })
+  return {
+    id: String(link._id),
+    title: link.title,
+    url: link.url,
+    enabled: link.enabled,
+    order: link.order,
+    clicks: link.clicks,
+  }
+})
+
+const updateLinkFn = createServerFn({ method: 'POST' })
+  .inputValidator(
+    z.object({
+      id: z.string(),
+      title: z.string().optional(),
+      url: z.string().optional(),
+      enabled: z.boolean().optional(),
+    }),
   )
+  .handler(async ({ data }) => {
+    const session = await getSession()
+    if (!session) throw new Error('Unauthorized')
+    await connectToDatabase()
+    await LinkModel.updateOne(
+      { _id: data.id, userId: session.userId },
+      { $set: { title: data.title, url: data.url, enabled: data.enabled } },
+    )
+    return { ok: true }
+  })
 
-  const handleUpdate = (id: string, updates: Partial<LinkItem>) => {
-    setLinks(links.map(l => (l.id === id ? { ...l, ...updates } : l)))
+const deleteLinkFn = createServerFn({ method: 'POST' })
+  .inputValidator(z.object({ id: z.string() }))
+  .handler(async ({ data }) => {
+    const session = await getSession()
+    if (!session) throw new Error('Unauthorized')
+    await connectToDatabase()
+    await LinkModel.deleteOne({ _id: data.id, userId: session.userId })
+    return { ok: true }
+  })
+
+// ── Route ────────────────────────────────────────────────────────────────────
+
+export const Route = createFileRoute('/dashboard/')({
+  loader: async () => {
+    const links = await getLinksFn()
+    return { links }
+  },
+  component: DashboardLinksPage,
+})
+
+// ── Component ────────────────────────────────────────────────────────────────
+
+function DashboardLinksPage() {
+  const { links: initialLinks } = Route.useLoaderData()
+  const [links, setLinks] = useState<LinkItem[]>(initialLinks)
+  const [saving, setSaving] = useState<Record<string, boolean>>({})
+
+  // ── Handlers ──────────────────────────────────────────────────────────────
+
+  async function handleAdd() {
+    const newLink = await addLinkFn()
+    setLinks((prev) => [newLink, ...prev])
   }
 
-  const handleDelete = (id: string) => {
-    setLinks(links.filter(l => l.id !== id))
-  }
-
-  const handleAdd = () => {
-    const newLink: LinkItem = {
-      id: Date.now().toString(),
-      title: '',
-      url: '',
-      enabled: true,
-      clicks: 0,
+  async function handleUpdate(id: string, updates: Partial<LinkItem>) {
+    // Optimistic update
+    setLinks((prev) => prev.map((l) => (l.id === id ? { ...l, ...updates } : l)))
+    setSaving((s) => ({ ...s, [id]: true }))
+    try {
+      const current = links.find((l) => l.id === id)!
+      await updateLinkFn({
+        data: {
+          id,
+          title: updates.title ?? current.title,
+          url: updates.url ?? current.url,
+          enabled: updates.enabled ?? current.enabled,
+        },
+      })
+    } finally {
+      setSaving((s) => ({ ...s, [id]: false }))
     }
-    setLinks([newLink, ...links])
+  }
+
+  async function handleDelete(id: string) {
+    setLinks((prev) => prev.filter((l) => l.id !== id))
+    await deleteLinkFn({ data: { id } })
   }
 
   return (
     <>
-      <div className="flex-1 px-6 pt-6 pb-40 sm:px-10 lg:px-12">
+      {/* ── Left: Editor ── */}
+      <div className="flex-1 overflow-y-auto px-6 pb-6 pt-6 sm:px-10 lg:px-12">
         {/* Header */}
         <div className="mb-6 flex items-center justify-between">
           <h1 className="text-2xl font-extrabold tracking-tight text-gray-900">Links</h1>
@@ -116,15 +185,16 @@ function DashboardLinksPage() {
         </div>
 
         {/* Add button */}
-        <button 
+        <button
           onClick={handleAdd}
-          className="mb-4 flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-[#1069f9] font-sans text-sm font-bold text-white transition-all hover:bg-[#0b5ad4] active:scale-[0.985]">
+          className="mb-4 flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-[#1069f9] font-sans text-sm font-bold text-white transition-all hover:bg-[#0b5ad4] active:scale-[0.985]"
+        >
           <Plus size={18} strokeWidth={2.5} />
-          Add
+          Add link
         </button>
 
         {/* Collection row */}
-        <div className="mb-6 flex items-center justify-between">
+        {/* <div className="mb-6 flex items-center justify-between">
           <button className="flex cursor-pointer items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-1.5 font-sans text-xs font-semibold text-gray-700 transition-colors hover:bg-gray-50">
             <FolderOpen size={14} />
             Add collection
@@ -134,7 +204,7 @@ function DashboardLinksPage() {
             View archive
             <ChevronRight size={12} />
           </button>
-        </div>
+        </div> */}
 
         {/* Link cards */}
         <div className="flex flex-col gap-3">
@@ -145,21 +215,21 @@ function DashboardLinksPage() {
                 id={link.id}
                 title={link.title}
                 url={link.url}
-                icon={link.icon}
                 enabled={link.enabled}
                 clicks={link.clicks}
+                saving={saving[link.id]}
                 onChange={handleUpdate}
                 onDelete={handleDelete}
               />
             ))
           ) : (
-            <div className="flex flex-col items-center justify-center py-10 rounded-2xl border border-gray-100 bg-white shadow-sm">
+            <div className="flex flex-col items-center justify-center rounded-2xl border border-gray-100 bg-white py-10">
               <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#1069f9]/10">
                 <Link2 size={24} className="text-[#1069f9]" />
               </div>
               <h3 className="mb-2 text-sm font-bold text-gray-900">No links yet</h3>
-              <p className="text-xs text-gray-500 text-center max-w-[250px]">
-                Click the Add button to create your first link and start sharing!
+              <p className="max-w-[250px] text-center text-xs text-gray-500">
+                Click "Add link" to create your first link and start sharing!
               </p>
             </div>
           )}
@@ -168,29 +238,20 @@ function DashboardLinksPage() {
         {/* Linkgrove footer toggle */}
         <div className="mt-4 flex items-center justify-between rounded-2xl border border-gray-200 bg-white p-4">
           <div>
-            <div className="flex items-center gap-1.5">
-              <span className="text-sm font-bold text-gray-900">Linkgrove footer</span>
-            </div>
+            <span className="text-sm font-bold text-gray-900">Linkgrove footer</span>
             <div className="mt-1.5 flex items-center gap-1.5">
               <TreePine size={14} className="text-[#1069f9]" />
-              <span className="text-sm font-extrabold tracking-tight text-gray-900">
-                Linkgrove
-              </span>
+              <span className="text-sm font-extrabold tracking-tight text-gray-900">Linkgrove</span>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <button className="flex h-6 w-6 cursor-pointer items-center justify-center rounded-full bg-[#1069f9] text-white">
-              <Plus size={12} />
-            </button>
-            <button className="relative h-6 w-11 cursor-pointer rounded-full border-none bg-[#22c55e] transition-colors">
-              <span className="absolute left-[22px] top-0.5 h-5 w-5 rounded-full bg-white" />
-            </button>
-          </div>
+          <button className="relative h-6 w-11 cursor-pointer rounded-full border-none bg-[#22c55e] transition-colors">
+            <span className="absolute left-[22px] top-0.5 h-5 w-5 rounded-full bg-white" />
+          </button>
         </div>
       </div>
 
-      {/* Live preview — hidden on tablet and below */}
-      <div className="hidden border-l border-gray-100 bg-white p-6 pb-12 overflow-y-auto xl:block">
+      {/* ── Right: Live Preview ── */}
+      <div className="hidden overflow-y-auto border-l border-gray-100 bg-white p-6 pb-12 xl:block">
         <LivePreview username="devkiisi" displayName="Kiisi" links={links} />
       </div>
     </>

@@ -19,7 +19,8 @@ export interface LinkCardProps {
   icon?: React.ReactNode
   enabled?: boolean
   clicks?: number
-  onChange: (id: string, updates: { title?: string; url?: string; enabled?: boolean }) => void
+  saving?: boolean
+  onChange: (id: string, updates: Partial<{ title: string; url: string; enabled: boolean }>) => void
   onDelete: (id: string) => void
 }
 
@@ -30,6 +31,7 @@ export default function LinkCard({
   icon,
   enabled = false,
   clicks = 0,
+  saving = false,
   onChange,
   onDelete,
 }: LinkCardProps) {
@@ -67,7 +69,7 @@ export default function LinkCard({
   return (
     <div
       className={`rounded-2xl border bg-white p-4 transition-shadow ${
-        enabled ? 'border-[#1069f9]/30 shadow-sm' : 'border-gray-200'
+        enabled ? 'border-[#1069f9]/30' : 'border-gray-200'
       }`}
     >
       <div className="mb-2 flex items-start gap-2">
@@ -135,6 +137,9 @@ export default function LinkCard({
         
         {/* Actions side */}
         <div className="flex items-center gap-2 shrink-0">
+          {saving && (
+            <span className="text-[10px] text-gray-400 animate-pulse">saving…</span>
+          )}
           <button className="cursor-pointer border-none bg-transparent p-1 text-gray-300 hover:text-gray-500 hidden sm:block">
             <Share2 size={16} />
           </button>
@@ -157,8 +162,6 @@ export default function LinkCard({
       {/* Action icons row */}
       <div className="mt-3 flex items-center gap-1">
         <span className="mr-1 shrink-0 text-gray-400 flex items-center justify-center w-6">{icon || <Link2 size={16} />}</span>
-        <ActionBtn icon={<Image size={14} />} />
-        <ActionBtn icon={<Star size={14} />} />
         <ActionBtn icon={<Copy size={14} />} onClick={() => navigator.clipboard.writeText(url)} />
         <ActionBtn icon={<ExternalLink size={14} />} onClick={() => url && window.open(url.startsWith('http') ? url : `https://${url}`, '_blank')} />
         

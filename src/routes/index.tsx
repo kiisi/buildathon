@@ -24,22 +24,16 @@ const steps = [
 
 const plans = [
   {
-    name: 'Free', price: '$0', period: 'forever',
+    name: 'Free', price: '₦0', period: 'forever',
     desc: 'Everything you need to get started.',
     cta: 'Get started free', href: '/auth/register', highlight: false,
-    perks: ['Unlimited links', 'Basic analytics', '5 themes', 'linkgrove.ee/yourname'],
+    perks: ['Unlimited links', 'Basic analytics', 'Multiple design styles', 'linkgrove.ee/yourname', 'Link shortener & QR code', 'Polls & Feedback'],
   },
   {
-    name: 'Pro', price: '$6', period: 'per month',
+    name: 'Pro', price: '₦2,000', period: 'per month',
     desc: 'For creators who want to grow faster.',
-    cta: 'Start free trial', href: '/auth/register', highlight: true,
-    perks: ['Everything in Free', 'Advanced analytics', 'Unlimited themes', 'Custom domain', 'Priority support', 'Remove branding'],
-  },
-  {
-    name: 'Business', price: '$18', period: 'per month',
-    desc: 'For teams and growing brands.',
-    cta: 'Contact sales', href: '/auth/register', highlight: false,
-    perks: ['Everything in Pro', 'Team collaboration', 'API access', 'White-label option', 'Dedicated support', 'Custom integrations'],
+    cta: 'Try free for 7 days', href: '/auth/register', highlight: true,
+    perks: ['Everything in Free', 'Remove Linkgrove logo', 'Customized layouts', 'Comprehensive analytics', 'Social media scheduling', 'Automated Instagram DMs', 'Email integrations', 'Lower seller fees'],
   },
 ]
 
@@ -285,7 +279,7 @@ function Pricing() {
             Start free. Upgrade when you're ready. No hidden fees, ever.
           </p>
         </div>
-        <div className="grid gap-5 lg:grid-cols-3">
+        <div className="grid gap-5 lg:grid-cols-2 max-w-3xl mx-auto w-full">
           {plans.map((plan) => (
             <div
               key={plan.name}

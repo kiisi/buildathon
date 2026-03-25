@@ -215,7 +215,7 @@ export default function Sidebar({ activeItem, onNavigate }: SidebarProps) {
               <div key={item.id}>
                 <button
                   onClick={() => (item.children ? toggleSection(item.id) : onNavigate(item.id))}
-                  className={`flex w-full cursor-pointer items-center gap-2.5 rounded-lg border-none px-2.5 py-2 text-left font-sans text-[13px] transition-colors ${activeItem === item.id
+                  className={`flex w-full cursor-pointer items-center gap-2.5 rounded-lg border-none px-2.5 py-2 text-left font-sans text-[13px] mb-0.5 transition-colors ${activeItem === item.id
                     ? 'bg-[#1069f9]/10 font-semibold text-[#1069f9]'
                     : 'bg-transparent font-medium text-gray-600 hover:bg-gray-50'
                     }`}
@@ -260,7 +260,7 @@ export default function Sidebar({ activeItem, onNavigate }: SidebarProps) {
       </nav>
 
       {/* Setup checklist */}
-      <div className="mx-3 mb-4 rounded-xl border border-gray-100 bg-white p-3.5 shadow-sm">
+      <div className="mx-3 mb-4 rounded-xl border border-gray-100 bg-white p-3.5">
         {/* Progress ring */}
         <div className="mb-2.5">
           <svg width="40" height="40" viewBox="0 0 40 40">
@@ -285,16 +285,6 @@ export default function Sidebar({ activeItem, onNavigate }: SidebarProps) {
         <p className="mb-3 text-[11px] text-gray-400">2 of 6 complete</p>
         <button className="h-8 w-full cursor-pointer rounded-full bg-[#1069f9] font-sans text-xs font-bold text-white transition-colors hover:bg-[#0b5ad4]">
           Finish setup
-        </button>
-      </div>
-
-      {/* Bottom icons */}
-      <div className="flex items-center justify-between border-t border-gray-100 px-4 py-3">
-        <button className="cursor-pointer border-none bg-transparent p-0 text-gray-400 hover:text-gray-600">
-          <HelpCircle size={18} />
-        </button>
-        <button className="cursor-pointer border-none bg-transparent p-0 text-gray-400 hover:text-gray-600">
-          <Flag size={18} />
         </button>
       </div>
     </aside>

@@ -53,7 +53,7 @@ function RegisterPage() {
     mutationFn: (values: { email: string; password: string }) =>
       registerFn({ data: values }),
     onSuccess: () => {
-      navigate({ to: '/onboarding/select-category' })
+      navigate({ to: '/auth/username' })
     },
     onError: (error: any) => {
       alert(error?.message || 'Registration failed')
