@@ -8,6 +8,7 @@ const UserSchema = new mongoose.Schema(
     plan: { type: String, enum: ['free', 'pro'], default: 'free' },
     lastTxnRef: { type: String, default: null },
     planRenewsAt: { type: Date, default: null },
+    allowDataSharing: { type: Boolean, default: true },
   },
   { timestamps: true },
 )

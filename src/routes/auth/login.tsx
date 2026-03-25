@@ -142,13 +142,13 @@ function LoginPage() {
           </div>
 
           {/* Divider */}
-          <div className="relative mb-6 text-center">
+          {/* <div className="relative mb-6 text-center">
             <div className="absolute inset-x-0 top-1/2 h-px bg-gray-100" />
             <span className="relative z-10 bg-white px-[18px] text-[0.85rem] font-medium tracking-wide text-gray-300">OR</span>
-          </div>
+          </div> */}
 
           {/* Social buttons */}
-          <div className="mb-7 flex flex-col gap-3">
+          {/* <div className="mb-7 flex flex-col gap-3">
             <button type="button" id="login-google-btn" className="flex h-[52px] w-full cursor-pointer items-center justify-center gap-2.5 rounded-full border-[1.5px] border-gray-200 bg-white font-sans text-[0.95rem] font-bold text-gray-900 transition-colors hover:border-gray-300 hover:bg-gray-50">
               <GoogleIcon />
               <span>Continue with Google</span>
@@ -157,7 +157,7 @@ function LoginPage() {
               <AppleIcon />
               <span>Continue with Apple</span>
             </button>
-          </div>
+          </div> */}
 
           {/* Footer */}
           <div className="mt-auto flex flex-col items-center gap-2.5 pt-6">

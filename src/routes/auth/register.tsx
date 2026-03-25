@@ -165,15 +165,15 @@ function RegisterPage() {
           </p>
 
           {/* Divider */}
-          <div className="relative mb-6 text-center">
+          {/* <div className="relative mb-6 text-center">
             <div className="absolute inset-x-0 top-1/2 h-px bg-gray-100" />
             <span className="relative z-10 bg-white px-[18px] text-[0.85rem] font-medium tracking-wide text-gray-300">
               OR
             </span>
-          </div>
+          </div> */}
 
           {/* Social buttons */}
-          <div className="mb-7 flex flex-col gap-3">
+          {/* <div className="mb-7 flex flex-col gap-3">
             <button
               type="button"
               id="register-google-btn"
@@ -190,7 +190,7 @@ function RegisterPage() {
               <AppleIcon />
               <span>Continue with Apple</span>
             </button>
-          </div>
+          </div> */}
 
           {/* Footer */}
           <div className="mt-auto flex flex-col items-center gap-2.5 pt-6">
