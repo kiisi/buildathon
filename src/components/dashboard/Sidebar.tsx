@@ -1,4 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
+import { useRouter } from '@tanstack/react-router'
+import { createServerFn } from '@tanstack/react-start'
+import { clearSession } from '../../lib/session'
 import {
   ChevronDown,
   ChevronUp,
@@ -21,6 +24,10 @@ import {
   Lightbulb,
   LogOut,
 } from 'lucide-react'
+
+const logoutFn = createServerFn({ method: 'POST' }).handler(async () => {
+  clearSession()
+})
 
 type NavItem = {
   id: string
@@ -65,11 +72,17 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ activeItem, onNavigate }: SidebarProps) {
+  const router = useRouter()
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     'my-linkgrove': true,
   })
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
+
+  async function handleLogout() {
+    await logoutFn()
+    router.navigate({ to: '/auth/login' })
+  }
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -173,9 +186,12 @@ export default function Sidebar({ activeItem, onNavigate }: SidebarProps) {
 
               {/* Log out */}
               <div className="p-2">
-                <button className="flex w-full cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-left font-sans transition-colors hover:bg-gray-50">
-                  <LogOut size={18} className="text-gray-800" />
-                  <span className="text-[14px] font-semibold text-gray-800">Log out</span>
+                <button
+                  onClick={handleLogout}
+                  className="flex w-full cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-left font-sans transition-colors hover:bg-red-50"
+                >
+                  <LogOut size={18} className="text-red-500" />
+                  <span className="text-[14px] font-semibold text-red-500">Log out</span>
                 </button>
               </div>
             </div>
