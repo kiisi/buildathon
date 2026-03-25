@@ -13,6 +13,7 @@ import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
+import { Route as SCodeRouteImport } from './routes/s/$code'
 import { Route as OnboardingSelectPlanRouteImport } from './routes/onboarding/select-plan'
 import { Route as OnboardingSelectCategoryRouteImport } from './routes/onboarding/select-category'
 import { Route as OnboardingProTrialRouteImport } from './routes/onboarding/pro-trial'
@@ -48,6 +49,11 @@ const DashboardIndexRoute = DashboardIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => DashboardRoute,
+} as any)
+const SCodeRoute = SCodeRouteImport.update({
+  id: '/s/$code',
+  path: '/s/$code',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const OnboardingSelectPlanRoute = OnboardingSelectPlanRouteImport.update({
   id: '/onboarding/select-plan',
@@ -146,6 +152,7 @@ export interface FileRoutesByFullPath {
   '/onboarding/pro-trial': typeof OnboardingProTrialRoute
   '/onboarding/select-category': typeof OnboardingSelectCategoryRoute
   '/onboarding/select-plan': typeof OnboardingSelectPlanRoute
+  '/s/$code': typeof SCodeRoute
   '/dashboard/': typeof DashboardIndexRoute
 }
 export interface FileRoutesByTo {
@@ -166,6 +173,7 @@ export interface FileRoutesByTo {
   '/onboarding/pro-trial': typeof OnboardingProTrialRoute
   '/onboarding/select-category': typeof OnboardingSelectCategoryRoute
   '/onboarding/select-plan': typeof OnboardingSelectPlanRoute
+  '/s/$code': typeof SCodeRoute
   '/dashboard': typeof DashboardIndexRoute
 }
 export interface FileRoutesById {
@@ -188,6 +196,7 @@ export interface FileRoutesById {
   '/onboarding/pro-trial': typeof OnboardingProTrialRoute
   '/onboarding/select-category': typeof OnboardingSelectCategoryRoute
   '/onboarding/select-plan': typeof OnboardingSelectPlanRoute
+  '/s/$code': typeof SCodeRoute
   '/dashboard/': typeof DashboardIndexRoute
 }
 export interface FileRouteTypes {
@@ -211,6 +220,7 @@ export interface FileRouteTypes {
     | '/onboarding/pro-trial'
     | '/onboarding/select-category'
     | '/onboarding/select-plan'
+    | '/s/$code'
     | '/dashboard/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -231,6 +241,7 @@ export interface FileRouteTypes {
     | '/onboarding/pro-trial'
     | '/onboarding/select-category'
     | '/onboarding/select-plan'
+    | '/s/$code'
     | '/dashboard'
   id:
     | '__root__'
@@ -252,6 +263,7 @@ export interface FileRouteTypes {
     | '/onboarding/pro-trial'
     | '/onboarding/select-category'
     | '/onboarding/select-plan'
+    | '/s/$code'
     | '/dashboard/'
   fileRoutesById: FileRoutesById
 }
@@ -267,6 +279,7 @@ export interface RootRouteChildren {
   OnboardingProTrialRoute: typeof OnboardingProTrialRoute
   OnboardingSelectCategoryRoute: typeof OnboardingSelectCategoryRoute
   OnboardingSelectPlanRoute: typeof OnboardingSelectPlanRoute
+  SCodeRoute: typeof SCodeRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -298,6 +311,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/dashboard/'
       preLoaderRoute: typeof DashboardIndexRouteImport
       parentRoute: typeof DashboardRoute
+    }
+    '/s/$code': {
+      id: '/s/$code'
+      path: '/s/$code'
+      fullPath: '/s/$code'
+      preLoaderRoute: typeof SCodeRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/onboarding/select-plan': {
       id: '/onboarding/select-plan'
@@ -445,6 +465,7 @@ const rootRouteChildren: RootRouteChildren = {
   OnboardingProTrialRoute: OnboardingProTrialRoute,
   OnboardingSelectCategoryRoute: OnboardingSelectCategoryRoute,
   OnboardingSelectPlanRoute: OnboardingSelectPlanRoute,
+  SCodeRoute: SCodeRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
