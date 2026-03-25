@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import {
   ChevronDown,
   ChevronUp,
@@ -14,6 +14,12 @@ import {
   QrCode,
   BarChart,
   LayoutDashboard,
+  Plus,
+  User,
+  Zap,
+  FileText,
+  Lightbulb,
+  LogOut,
 } from 'lucide-react'
 
 type NavItem = {
@@ -62,6 +68,22 @@ export default function Sidebar({ activeItem, onNavigate }: SidebarProps) {
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     'my-linkgrove': true,
   })
+  const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsUserDropdownOpen(false)
+      }
+    }
+    if (isUserDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [isUserDropdownOpen])
 
   function toggleSection(id: string) {
     setExpandedSections((prev) => ({ ...prev, [id]: !prev[id] }))
@@ -71,13 +93,94 @@ export default function Sidebar({ activeItem, onNavigate }: SidebarProps) {
     <aside className="flex h-full w-[240px] shrink-0 flex-col border-r border-gray-100 bg-white">
       {/* User dropdown + notification */}
       <div className="flex items-center justify-between px-4 pb-3 pt-4">
-        <button className="flex cursor-pointer items-center gap-1.5 border-none bg-transparent p-0 font-sans text-sm font-semibold text-gray-700">
-          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gray-200">
-            <span className="text-xs text-gray-500">👤</span>
-          </div>
-          devkiisi
-          <ChevronDown size={14} className="text-gray-400" />
-        </button>
+        <div className="relative" ref={dropdownRef}>
+          <button 
+            onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
+            className="flex cursor-pointer items-center gap-1.5 border-none bg-transparent p-0 font-sans text-sm font-semibold text-gray-700 hover:text-gray-900"
+          >
+            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gray-200">
+              <span className="text-xs text-gray-500">👤</span>
+            </div>
+            devkiisi
+            <ChevronDown size={14} className="text-gray-400 border-none" />
+          </button>
+
+          {/* Dropdown Menu */}
+          {isUserDropdownOpen && (
+            <div className="absolute left-0 top-full mt-2 w-64 rounded-2xl border border-gray-100 bg-white p-0 shadow-[0_4px_24px_rgba(0,0,0,0.06)] z-50 overflow-hidden">
+              {/* Header */}
+              <div className="flex items-start justify-between p-4">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray-200">
+                    <span className="text-sm text-gray-500">👤</span>
+                  </div>
+                  <div className="flex flex-col text-left">
+                    <span className="text-[15px] font-bold text-gray-900">devkiisi</span>
+                    <span className="text-[13px] text-gray-400">linkgrove.ee/devkiisi</span>
+                  </div>
+                </div>
+                <div className="rounded-full border border-gray-200 px-3 py-1 font-sans text-[11px] font-semibold text-gray-600 select-none">
+                  Free
+                </div>
+              </div>
+
+              <div className="h-px w-full bg-gray-100" />
+
+              {/* Create new */}
+              <div className="p-2">
+                <button className="flex w-full cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-left font-sans transition-colors hover:bg-gray-50">
+                  <Plus size={18} className="text-gray-700" />
+                  <span className="text-[14px] font-semibold text-gray-800">Create new Linkgrove</span>
+                </button>
+              </div>
+
+              <div className="h-px w-full bg-gray-100" />
+
+              {/* Account / Upgrade */}
+              <div className="flex flex-col p-2">
+                <button 
+                  onClick={() => { setIsUserDropdownOpen(false); onNavigate('account'); }}
+                  className="flex w-full cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-left font-sans transition-colors hover:bg-gray-50"
+                >
+                  <User size={18} className="text-gray-800" />
+                  <span className="text-[14px] font-semibold text-gray-800">Account</span>
+                </button>
+                <button className="flex w-full cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-left font-sans transition-colors hover:bg-gray-50">
+                  <Zap size={18} className="text-gray-800" />
+                  <span className="text-[14px] font-semibold text-gray-800">Upgrade</span>
+                </button>
+              </div>
+
+              <div className="h-px w-full bg-gray-100" />
+
+              {/* Help */}
+              <div className="flex flex-col p-2">
+                <button className="flex w-full cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-left font-sans transition-colors hover:bg-gray-50">
+                  <HelpCircle size={18} className="text-gray-800" />
+                  <span className="text-[14px] font-semibold text-gray-800">Ask a question</span>
+                </button>
+                <button className="flex w-full cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-left font-sans transition-colors hover:bg-gray-50">
+                  <FileText size={18} className="text-gray-800" />
+                  <span className="text-[14px] font-semibold text-gray-800">Help topics</span>
+                </button>
+                <button className="flex w-full cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-left font-sans transition-colors hover:bg-gray-50">
+                  <Lightbulb size={18} className="text-gray-800" />
+                  <span className="text-[14px] font-semibold text-gray-800">Share feedback</span>
+                </button>
+              </div>
+
+              <div className="h-px w-full bg-gray-100" />
+
+              {/* Log out */}
+              <div className="p-2">
+                <button className="flex w-full cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-left font-sans transition-colors hover:bg-gray-50">
+                  <LogOut size={18} className="text-gray-800" />
+                  <span className="text-[14px] font-semibold text-gray-800">Log out</span>
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
         <button className="cursor-pointer border-none bg-transparent p-1 text-gray-400 hover:text-gray-600">
           <Bell size={18} />
         </button>

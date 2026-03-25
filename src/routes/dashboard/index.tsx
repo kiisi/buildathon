@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import LinkCard from '../../components/dashboard/LinkCard'
 import LivePreview from '../../components/dashboard/LivePreview'
@@ -17,6 +18,7 @@ import {
   Twitch,
   TreePine,
   Globe,
+  Link2,
 } from 'lucide-react'
 
 export const Route = createFileRoute('/dashboard/')({
@@ -24,7 +26,7 @@ export const Route = createFileRoute('/dashboard/')({
 })
 
 const socialLinks = [
-  { title: 'Instagram', icon: <Instagram size={16} />, enabled: false, connectHint: 'Connect your Instagram' },
+  { title: 'Instagram', icon: <Instagram size={16} />, enabled: false },
   { title: 'WhatsApp', icon: <MessageCircle size={16} />, enabled: false },
   { title: 'YouTube', icon: <Youtube size={16} />, enabled: false },
   { title: 'Spotify', icon: <Music size={16} />, enabled: true },
@@ -32,10 +34,49 @@ const socialLinks = [
   { title: 'Twitch', icon: <Twitch size={16} />, enabled: false },
 ]
 
+type LinkItem = {
+  id: string
+  title: string
+  url: string
+  icon?: React.ReactNode
+  enabled: boolean
+  clicks: number
+}
+
 function DashboardLinksPage() {
+  const [links, setLinks] = useState<LinkItem[]>(() => 
+    socialLinks.map((l, i) => ({
+      id: String(i + 1),
+      title: l.title,
+      url: '',
+      icon: l.icon,
+      enabled: l.enabled,
+      clicks: Math.floor(Math.random() * 100)
+    }))
+  )
+
+  const handleUpdate = (id: string, updates: Partial<LinkItem>) => {
+    setLinks(links.map(l => (l.id === id ? { ...l, ...updates } : l)))
+  }
+
+  const handleDelete = (id: string) => {
+    setLinks(links.filter(l => l.id !== id))
+  }
+
+  const handleAdd = () => {
+    const newLink: LinkItem = {
+      id: Date.now().toString(),
+      title: '',
+      url: '',
+      enabled: true,
+      clicks: 0,
+    }
+    setLinks([newLink, ...links])
+  }
+
   return (
     <>
-      <div className="flex-1 px-6 pt-6 pb-12 sm:px-10 lg:px-12">
+      <div className="flex-1 px-6 pt-6 pb-40 sm:px-10 lg:px-12">
         {/* Header */}
         <div className="mb-6 flex items-center justify-between">
           <h1 className="text-2xl font-extrabold tracking-tight text-gray-900">Links</h1>
@@ -75,7 +116,9 @@ function DashboardLinksPage() {
         </div>
 
         {/* Add button */}
-        <button className="mb-4 flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-[#1069f9] font-sans text-sm font-bold text-white transition-all hover:bg-[#0b5ad4] active:scale-[0.985]">
+        <button 
+          onClick={handleAdd}
+          className="mb-4 flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-[#1069f9] font-sans text-sm font-bold text-white transition-all hover:bg-[#0b5ad4] active:scale-[0.985]">
           <Plus size={18} strokeWidth={2.5} />
           Add
         </button>
@@ -95,17 +138,31 @@ function DashboardLinksPage() {
 
         {/* Link cards */}
         <div className="flex flex-col gap-3">
-          {socialLinks.map((link) => (
-            <LinkCard
-              key={link.title}
-              title={link.title}
-              url=""
-              icon={link.icon}
-              enabled={link.enabled}
-              clicks={0}
-              connectHint={link.connectHint}
-            />
-          ))}
+          {links.length > 0 ? (
+            links.map((link) => (
+              <LinkCard
+                key={link.id}
+                id={link.id}
+                title={link.title}
+                url={link.url}
+                icon={link.icon}
+                enabled={link.enabled}
+                clicks={link.clicks}
+                onChange={handleUpdate}
+                onDelete={handleDelete}
+              />
+            ))
+          ) : (
+            <div className="flex flex-col items-center justify-center py-10 rounded-2xl border border-gray-100 bg-white shadow-sm">
+              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#1069f9]/10">
+                <Link2 size={24} className="text-[#1069f9]" />
+              </div>
+              <h3 className="mb-2 text-sm font-bold text-gray-900">No links yet</h3>
+              <p className="text-xs text-gray-500 text-center max-w-[250px]">
+                Click the Add button to create your first link and start sharing!
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Linkgrove footer toggle */}
@@ -134,7 +191,7 @@ function DashboardLinksPage() {
 
       {/* Live preview — hidden on tablet and below */}
       <div className="hidden border-l border-gray-100 bg-white p-6 pb-12 overflow-y-auto xl:block">
-        <LivePreview username="devkiisi" displayName="Kiisi" />
+        <LivePreview username="devkiisi" displayName="Kiisi" links={links} />
       </div>
     </>
   )

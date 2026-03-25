@@ -3,7 +3,8 @@ import Sidebar from '../components/dashboard/Sidebar'
 import {
   TreePine,
   Sparkles,
-  Music,
+  Link2,
+  BarChart,
   User,
 } from 'lucide-react'
 
@@ -17,7 +18,9 @@ function DashboardLayout() {
 
   // Determine active nav from current route
   const currentPath = matches[matches.length - 1]?.fullPath || ''
-  const activeNav = currentPath.includes('anonymous-messages')
+  const activeNav = currentPath.includes('account')
+    ? 'account'
+    : currentPath.includes('anonymous-messages')
     ? 'anonymous-message'
     : currentPath.includes('link-shortener')
       ? 'link-shortener'
@@ -32,7 +35,9 @@ function DashboardLayout() {
               : 'links'
 
   function handleNavigate(id: string) {
-    if (id === 'anonymous-message') {
+    if (id === 'account') {
+      navigate({ to: '/dashboard/account' })
+    } else if (id === 'anonymous-message') {
       navigate({ to: '/dashboard/anonymous-messages' })
     } else if (id === 'link-shortener') {
       navigate({ to: '/dashboard/link-shortener' })
@@ -65,19 +70,23 @@ function DashboardLayout() {
       </div>
 
       {/* Mobile bottom nav */}
-      <div className="flex items-center justify-around border-t border-gray-200 bg-white py-2 lg:hidden">
+      <div className="flex items-center justify-around border-t border-gray-200 bg-white py-2 lg:hidden pb-safe">
         {[
-          { icon: <TreePine size={20} />, label: 'Links' },
-          { icon: <Sparkles size={20} />, label: 'Design' },
-          { icon: <Music size={20} />, label: 'Earn' },
-          { icon: <User size={20} />, label: 'Profile' },
+          { id: 'links', icon: <TreePine size={20} />, label: 'Links' },
+          { id: 'design', icon: <Sparkles size={20} />, label: 'Design' },
+          { id: 'link-shortener', icon: <Link2 size={20} />, label: 'Shorts' },
+          { id: 'polls', icon: <BarChart size={20} />, label: 'Polls' },
+          { id: 'account', icon: <User size={20} />, label: 'Account' },
         ].map((item) => (
           <button
-            key={item.label}
-            className="flex cursor-pointer flex-col items-center gap-0.5 border-none bg-transparent text-gray-400"
+            key={item.id}
+            onClick={() => handleNavigate(item.id)}
+            className={`flex cursor-pointer flex-col items-center gap-1 border-none bg-transparent transition-colors ${
+              activeNav === item.id ? 'text-[#1069f9]' : 'text-gray-400 hover:text-gray-600'
+            }`}
           >
             {item.icon}
-            <span className="text-[10px] font-medium">{item.label}</span>
+            <span className={`text-[10px] ${activeNav === item.id ? 'font-bold' : 'font-medium'}`}>{item.label}</span>
           </button>
         ))}
       </div>

@@ -1,135 +1,188 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { useState } from 'react'
+import { useFormik } from 'formik'
+import * as Yup from 'yup'
 import { TreePine } from 'lucide-react'
+import { useMutation } from '@tanstack/react-query'
+import { createServerFn } from '@tanstack/react-start'
+import { z } from 'zod'
+import connectToDatabase from '../../lib/db'
+import User from '../../models/User'
+import bcrypt from 'bcryptjs'
+import { createSession } from '../../lib/session'
+
+const loginSchema_server = z.object({
+  email: z.string().email(),
+  password: z.string().min(1),
+})
+
+const loginFn = createServerFn({ method: 'POST' })
+  .inputValidator(loginSchema_server)
+  .handler(async ({ data }) => {
+    await connectToDatabase()
+
+    const user = await User.findOne({ email: data.email })
+    if (!user) throw new Error('Invalid email or password')
+
+    const valid = await bcrypt.compare(data.password, user.password)
+    if (!valid) throw new Error('Invalid email or password')
+
+    await createSession(String(user._id))
+
+    return { userId: String(user._id) }
+  })
 
 export const Route = createFileRoute('/auth/login')({
   component: LoginPage,
 })
 
+const loginSchema = Yup.object({
+  email: Yup.string().email('Please enter a valid email').required('Email is required'),
+  password: Yup.string().required('Password is required'),
+})
+
 function LoginPage() {
-  const [email, setEmail] = useState('')
   const navigate = useNavigate()
 
-  function handleContinue(e: React.FormEvent) {
-    e.preventDefault()
-    if (!email.trim()) return
-    navigate({
-      to: '/auth/otp',
-      search: { email: email.trim() },
-    })
-  }
+  const mutation = useMutation({
+    mutationFn: (values: { email: string; password: string }) =>
+      loginFn({ data: values }),
+    onSuccess: () => navigate({ to: '/dashboard' }),
+    onError: (error: any) => alert(error?.message || 'Login failed'),
+  })
+
+  const formik = useFormik({
+    initialValues: { email: '', password: '' },
+    validationSchema: loginSchema,
+    onSubmit: (values) => mutation.mutate(values),
+  })
+
+  const isDisabled = !formik.dirty || !formik.isValid
 
   return (
-    <div className="auth-layout">
-      {/* ── Left Panel: Form ── */}
-      <div className="auth-form-panel">
-        <div className="auth-form-inner">
+    <div className="flex min-h-dvh w-full">
+      {/* Left Panel */}
+      <div className="flex flex-1 items-center justify-center px-5 py-8 sm:px-10 lg:flex-none lg:basis-1/2">
+        <div className="flex w-full max-w-[420px] flex-col">
           {/* Logo */}
-          <div className="auth-logo">
-            <TreePine size={28} strokeWidth={2.5} color="#1069f9" />
-            <span className="auth-logo-text">Linkgrove</span>
+          <div className="mb-9 flex items-center gap-1.5">
+            <TreePine size={28} strokeWidth={2.5} className="text-[#1069f9]" />
+            <span className="text-[1.35rem] font-extrabold tracking-tight text-gray-900">Linkgrove</span>
           </div>
 
-          {/* Heading */}
-          <h1 className="auth-heading">Welcome back</h1>
-          <p className="auth-subtitle">
-            Log in to your <span className="auth-brand-link">Linkgrove</span>
+          <h1 className="mb-2 text-[2rem] font-extrabold tracking-tight text-gray-900">Welcome back</h1>
+          <p className="mb-9 text-[0.95rem] text-gray-400">
+            Log in to your <span className="font-semibold text-gray-700">Linkgrove</span>
           </p>
 
-          {/* Form */}
-          <form onSubmit={handleContinue} className="auth-form">
-            <div className="auth-input-wrapper">
+          <form onSubmit={formik.handleSubmit} className="mb-5 flex flex-col gap-4" noValidate>
+            <div className="w-full">
               <input
-                id="email-input"
-                type="text"
-                className="auth-input"
-                placeholder="Email or username"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                id="login-email"
+                name="email"
+                type="email"
+                className={`h-[52px] w-full rounded-[10px] border-[1.5px] bg-white px-4 font-sans text-[0.95rem] text-gray-900 outline-none transition-colors placeholder:text-gray-400 ${
+                  formik.touched.email && formik.errors.email
+                    ? 'border-red-400 focus:border-red-500'
+                    : 'border-gray-200 focus:border-gray-900'
+                }`}
+                placeholder="Email"
+                value={formik.values.email}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
                 autoComplete="email"
                 autoFocus
               />
+              {formik.touched.email && formik.errors.email && (
+                <p className="mt-1.5 text-xs text-red-500">{formik.errors.email}</p>
+              )}
             </div>
 
-            <button type="submit" className="auth-continue-btn" id="continue-btn">
-              Continue
+            <div className="w-full">
+              <input
+                id="login-password"
+                name="password"
+                type="password"
+                className={`h-[52px] w-full rounded-[10px] border-[1.5px] bg-white px-4 font-sans text-[0.95rem] text-gray-900 outline-none transition-colors placeholder:text-gray-400 ${
+                  formik.touched.password && formik.errors.password
+                    ? 'border-red-400 focus:border-red-500'
+                    : 'border-gray-200 focus:border-gray-900'
+                }`}
+                placeholder="Password"
+                value={formik.values.password}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                autoComplete="current-password"
+              />
+              {formik.touched.password && formik.errors.password && (
+                <p className="mt-1.5 text-xs text-red-500">{formik.errors.password}</p>
+              )}
+            </div>
+
+            <button
+              type="submit"
+              id="login-continue-btn"
+              disabled={isDisabled || mutation.isPending}
+              className={`mt-2 h-[52px] w-full rounded-full font-sans text-base font-bold tracking-tight transition-all ${
+                isDisabled || mutation.isPending
+                  ? 'cursor-not-allowed bg-gray-200 text-gray-400'
+                  : 'cursor-pointer bg-gray-900 text-white hover:bg-gray-700 active:scale-[0.985]'
+              }`}
+            >
+              {mutation.isPending ? 'Logging in...' : 'Log in'}
             </button>
           </form>
 
+          {/* Forgot links */}
+          <div className="mb-6 flex gap-3 text-[0.85rem]">
+            <a href="#" className="text-gray-500 hover:underline">Forgot password?</a>
+            <span className="text-gray-300">•</span>
+            <a href="#" className="text-gray-500 hover:underline">Forgot username?</a>
+          </div>
+
           {/* Divider */}
-          <div className="auth-divider">
-            <span className="auth-divider-text">OR</span>
+          <div className="relative mb-6 text-center">
+            <div className="absolute inset-x-0 top-1/2 h-px bg-gray-100" />
+            <span className="relative z-10 bg-white px-[18px] text-[0.85rem] font-medium tracking-wide text-gray-300">OR</span>
           </div>
 
           {/* Social buttons */}
-          <div className="auth-social-buttons">
-            <button type="button" className="auth-social-btn" id="google-btn">
+          <div className="mb-7 flex flex-col gap-3">
+            <button type="button" id="login-google-btn" className="flex h-[52px] w-full cursor-pointer items-center justify-center gap-2.5 rounded-full border-[1.5px] border-gray-200 bg-white font-sans text-[0.95rem] font-bold text-gray-900 transition-colors hover:border-gray-300 hover:bg-gray-50">
               <GoogleIcon />
               <span>Continue with Google</span>
             </button>
-            <button type="button" className="auth-social-btn" id="apple-btn">
+            <button type="button" id="login-apple-btn" className="flex h-[52px] w-full cursor-pointer items-center justify-center gap-2.5 rounded-full border-[1.5px] border-gray-200 bg-white font-sans text-[0.95rem] font-bold text-gray-900 transition-colors hover:border-gray-300 hover:bg-gray-50">
               <AppleIcon />
               <span>Continue with Apple</span>
             </button>
           </div>
 
-          {/* Forgot links */}
-          <div className="auth-forgot-links">
-            <a href="#" className="auth-link">
-              Forgot password?
-            </a>
-            <span className="auth-forgot-dot"> • </span>
-            <a href="#" className="auth-link">
-              Forgot username?
-            </a>
-          </div>
-
           {/* Footer */}
-          <div className="auth-footer">
-            <span className="auth-cookie-link">Cookie preferences</span>
-            <p className="auth-signup-text">
+          <div className="mt-auto flex flex-col items-center gap-2.5 pt-6">
+            <span className="cursor-pointer self-start text-xs text-gray-400 hover:underline">Cookie preferences</span>
+            <p className="m-0 text-sm text-gray-500">
               Don't have an account?{' '}
-              <a href="/auth/register" className="auth-signup-link">
-                Sign up
-              </a>
+              <a href="/auth/register" className="font-bold text-gray-900 underline hover:text-[#1069f9]">Sign up</a>
             </p>
           </div>
         </div>
       </div>
 
-      {/* ── Right Panel: Hero Image ── */}
-      <div className="auth-hero-panel">
-        <img
-          src="/hero-login.png"
-          alt="LinkGrove showcase"
-          className="auth-hero-img"
-        />
+      {/* Right Panel */}
+      <div className="hidden items-center justify-center overflow-hidden bg-gray-100 lg:flex lg:flex-none lg:basis-1/2">
+        <img src="/hero-login.png" alt="LinkGrove showcase" className="h-dvh w-full object-cover" />
       </div>
     </div>
   )
 }
 
-/* ── Inline SVG Icons ── */
-
 function GoogleIcon() {
   return (
     <svg width="20" height="20" viewBox="0 0 48 48">
-      <path
-        fill="#EA4335"
-        d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"
-      />
-      <path
-        fill="#4285F4"
-        d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"
-      />
-      <path
-        fill="#FBBC05"
-        d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"
-      />
-      <path
-        fill="#34A853"
-        d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"
-      />
+      <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />
+      <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z" />
+      <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z" />
+      <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" />
     </svg>
   )
 }

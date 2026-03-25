@@ -3,9 +3,12 @@ import { TreePine, Share2, Settings, User } from 'lucide-react'
 interface LivePreviewProps {
   username: string
   displayName: string
+  links?: { id: string; title: string; url: string; enabled: boolean }[]
 }
 
-export default function LivePreview({ username, displayName }: LivePreviewProps) {
+export default function LivePreview({ username, displayName, links = [] }: LivePreviewProps) {
+  const activeLinks = links.filter(l => l.enabled && l.title)
+
   return (
     <div className="w-[260px] shrink-0">
       {/* URL bar */}
@@ -40,11 +43,29 @@ export default function LivePreview({ username, displayName }: LivePreviewProps)
           <p className="text-xs text-gray-400">{displayName}</p>
         </div>
 
-        {/* Empty state - placeholder links for when links are added */}
-        <div className="space-y-2 px-4 pb-6">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="h-9 w-full rounded-lg bg-gray-50" />
-          ))}
+        {/* Links */}
+        <div className="space-y-2 px-4 pb-6 min-h-[150px]">
+          {activeLinks.length > 0 ? (
+            activeLinks.map((link) => (
+              <a
+                key={link.id}
+                href={link.url}
+                target="_blank"
+                rel="noreferrer"
+                className="flex min-h-[44px] w-full items-center justify-center rounded-full border border-gray-200 bg-white px-4 py-2.5 text-center transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#1069f9]/50"
+              >
+                <span className="text-[13px] font-bold text-gray-800 break-words line-clamp-2">
+                  {link.title}
+                </span>
+              </a>
+            ))
+          ) : (
+            <>
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="h-11 w-full rounded-full bg-gray-50 animate-pulse border border-gray-100" />
+              ))}
+            </>
+          )}
         </div>
 
         {/* Footer */}

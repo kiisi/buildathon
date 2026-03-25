@@ -2,6 +2,36 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useFormik } from 'formik'
 import * as Yup from 'yup'
 import { TreePine } from 'lucide-react'
+import { useMutation } from '@tanstack/react-query'
+import { createServerFn } from '@tanstack/react-start'
+import connectToDatabase from '../../lib/db'
+import User from '../../models/User'
+import bcrypt from 'bcryptjs'
+import { z } from 'zod'
+import { createSession } from '../../lib/session'
+
+const registerSchema_server = z.object({
+  email: z.string().email(),
+  password: z.string().min(6),
+})
+
+const registerFn = createServerFn({ method: 'POST' })
+  .inputValidator(registerSchema_server)
+  .handler(async ({ data }) => {
+    await connectToDatabase()
+
+    const existing = await User.findOne({ email: data.email })
+    if (existing) {
+      throw new Error('User already exists')
+    }
+
+    const hashedPassword = await bcrypt.hash(data.password, 10)
+    const newUser = await User.create({ email: data.email, password: hashedPassword })
+
+    await createSession(String(newUser._id))
+
+    return { userId: String(newUser._id) }
+  })
 
 export const Route = createFileRoute('/auth/register')({
   component: RegisterPage,
@@ -11,19 +41,30 @@ const registerSchema = Yup.object({
   email: Yup.string()
     .email('Please enter a valid email address')
     .required('Email is required'),
+  password: Yup.string()
+    .min(6, 'Password must be at least 6 characters')
+    .required('Password is required'),
 })
 
 function RegisterPage() {
   const navigate = useNavigate()
 
+  const mutation = useMutation({
+    mutationFn: (values: { email: string; password: string }) =>
+      registerFn({ data: values }),
+    onSuccess: () => {
+      navigate({ to: '/onboarding/select-category' })
+    },
+    onError: (error: any) => {
+      alert(error?.message || 'Registration failed')
+    },
+  })
+
   const formik = useFormik({
-    initialValues: { email: '' },
+    initialValues: { email: '', password: '' },
     validationSchema: registerSchema,
     onSubmit: (values) => {
-      navigate({
-        to: '/auth/username',
-        search: { email: values.email },
-      })
+      mutation.mutate(values)
     },
   })
 
@@ -72,17 +113,38 @@ function RegisterPage() {
               )}
             </div>
 
+            <div className="w-full">
+              <input
+                id="register-password"
+                name="password"
+                type="password"
+                className={`h-[52px] w-full rounded-[10px] border-[1.5px] bg-white px-4 font-sans text-[0.95rem] text-gray-900 outline-none transition-colors placeholder:text-gray-400 ${
+                  formik.touched.password && formik.errors.password
+                    ? 'border-red-400 focus:border-red-500'
+                    : 'border-gray-200 focus:border-gray-900'
+                }`}
+                placeholder="Password"
+                value={formik.values.password}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                autoComplete="new-password"
+              />
+              {formik.touched.password && formik.errors.password && (
+                <p className="mt-1.5 text-xs text-red-500">{formik.errors.password}</p>
+              )}
+            </div>
+
             <button
               type="submit"
               id="register-continue-btn"
-              disabled={isDisabled}
-              className={`h-[52px] w-full rounded-full font-sans text-base font-bold tracking-tight transition-all ${
-                isDisabled
+              disabled={isDisabled || mutation.isPending}
+              className={`h-[52px] w-full rounded-full font-sans text-base font-bold tracking-tight transition-all mt-2 ${
+                isDisabled || mutation.isPending
                   ? 'cursor-not-allowed bg-gray-200 text-gray-400'
                   : 'cursor-pointer bg-gray-900 text-white hover:bg-gray-700 active:scale-[0.985]'
               }`}
             >
-              Continue
+              {mutation.isPending ? 'Loading...' : 'Continue'}
             </button>
           </form>
 

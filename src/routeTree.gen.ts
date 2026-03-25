@@ -22,6 +22,7 @@ import { Route as DashboardLinkShortenerRouteImport } from './routes/dashboard/l
 import { Route as DashboardInsightsRouteImport } from './routes/dashboard/insights'
 import { Route as DashboardDesignRouteImport } from './routes/dashboard/design'
 import { Route as DashboardAnonymousMessagesRouteImport } from './routes/dashboard/anonymous-messages'
+import { Route as DashboardAccountRouteImport } from './routes/dashboard/account'
 import { Route as AuthUsernameRouteImport } from './routes/auth/username'
 import { Route as AuthRegisterRouteImport } from './routes/auth/register'
 import { Route as AuthOtpRouteImport } from './routes/auth/otp'
@@ -95,6 +96,11 @@ const DashboardAnonymousMessagesRoute =
     path: '/anonymous-messages',
     getParentRoute: () => DashboardRoute,
   } as any)
+const DashboardAccountRoute = DashboardAccountRouteImport.update({
+  id: '/account',
+  path: '/account',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const AuthUsernameRoute = AuthUsernameRouteImport.update({
   id: '/auth/username',
   path: '/auth/username',
@@ -130,6 +136,7 @@ export interface FileRoutesByFullPath {
   '/auth/otp': typeof AuthOtpRoute
   '/auth/register': typeof AuthRegisterRoute
   '/auth/username': typeof AuthUsernameRoute
+  '/dashboard/account': typeof DashboardAccountRoute
   '/dashboard/anonymous-messages': typeof DashboardAnonymousMessagesRoute
   '/dashboard/design': typeof DashboardDesignRoute
   '/dashboard/insights': typeof DashboardInsightsRoute
@@ -149,6 +156,7 @@ export interface FileRoutesByTo {
   '/auth/otp': typeof AuthOtpRoute
   '/auth/register': typeof AuthRegisterRoute
   '/auth/username': typeof AuthUsernameRoute
+  '/dashboard/account': typeof DashboardAccountRoute
   '/dashboard/anonymous-messages': typeof DashboardAnonymousMessagesRoute
   '/dashboard/design': typeof DashboardDesignRoute
   '/dashboard/insights': typeof DashboardInsightsRoute
@@ -170,6 +178,7 @@ export interface FileRoutesById {
   '/auth/otp': typeof AuthOtpRoute
   '/auth/register': typeof AuthRegisterRoute
   '/auth/username': typeof AuthUsernameRoute
+  '/dashboard/account': typeof DashboardAccountRoute
   '/dashboard/anonymous-messages': typeof DashboardAnonymousMessagesRoute
   '/dashboard/design': typeof DashboardDesignRoute
   '/dashboard/insights': typeof DashboardInsightsRoute
@@ -192,6 +201,7 @@ export interface FileRouteTypes {
     | '/auth/otp'
     | '/auth/register'
     | '/auth/username'
+    | '/dashboard/account'
     | '/dashboard/anonymous-messages'
     | '/dashboard/design'
     | '/dashboard/insights'
@@ -211,6 +221,7 @@ export interface FileRouteTypes {
     | '/auth/otp'
     | '/auth/register'
     | '/auth/username'
+    | '/dashboard/account'
     | '/dashboard/anonymous-messages'
     | '/dashboard/design'
     | '/dashboard/insights'
@@ -231,6 +242,7 @@ export interface FileRouteTypes {
     | '/auth/otp'
     | '/auth/register'
     | '/auth/username'
+    | '/dashboard/account'
     | '/dashboard/anonymous-messages'
     | '/dashboard/design'
     | '/dashboard/insights'
@@ -350,6 +362,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardAnonymousMessagesRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard/account': {
+      id: '/dashboard/account'
+      path: '/account'
+      fullPath: '/dashboard/account'
+      preLoaderRoute: typeof DashboardAccountRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/auth/username': {
       id: '/auth/username'
       path: '/auth/username'
@@ -389,6 +408,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface DashboardRouteChildren {
+  DashboardAccountRoute: typeof DashboardAccountRoute
   DashboardAnonymousMessagesRoute: typeof DashboardAnonymousMessagesRoute
   DashboardDesignRoute: typeof DashboardDesignRoute
   DashboardInsightsRoute: typeof DashboardInsightsRoute
@@ -399,6 +419,7 @@ interface DashboardRouteChildren {
 }
 
 const DashboardRouteChildren: DashboardRouteChildren = {
+  DashboardAccountRoute: DashboardAccountRoute,
   DashboardAnonymousMessagesRoute: DashboardAnonymousMessagesRoute,
   DashboardDesignRoute: DashboardDesignRoute,
   DashboardInsightsRoute: DashboardInsightsRoute,
