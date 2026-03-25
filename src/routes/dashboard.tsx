@@ -1,5 +1,7 @@
-import { createFileRoute, Outlet, useNavigate, useMatches } from '@tanstack/react-router'
+import { createFileRoute, Outlet, useNavigate, useMatches, redirect } from '@tanstack/react-router'
+import { createServerFn } from '@tanstack/react-start'
 import Sidebar from '../components/dashboard/Sidebar'
+import { getSession } from '../lib/session'
 import {
   TreePine,
   Sparkles,
@@ -8,7 +10,19 @@ import {
   User,
 } from 'lucide-react'
 
+const getSessionFn = createServerFn().handler(async () => {
+  const session = await getSession()
+  return session
+})
+
 export const Route = createFileRoute('/dashboard')({
+  beforeLoad: async () => {
+    const session = await getSessionFn()
+    if (!session) {
+      throw redirect({ to: '/auth/login' })
+    }
+    return { userId: session.userId }
+  },
   component: DashboardLayout,
 })
 
