@@ -1,89 +1,76 @@
 import { createFileRoute, Outlet, useNavigate, useMatches, redirect } from '@tanstack/react-router'
 import { createServerFn } from '@tanstack/react-start'
 import Sidebar from '../components/dashboard/Sidebar'
-import { getSession } from '../lib/session'
-import {
-  TreePine,
-  Sparkles,
-  Link2,
-  BarChart,
-  User,
-} from 'lucide-react'
+import connectToDatabase from '../lib/db'
+import UserModel from '../models/User'
+import { TreePine, Sparkles, Link2, BarChart, User } from 'lucide-react'
 
-const getSessionFn = createServerFn().handler(async () => {
+const checkSessionFn = createServerFn().handler(async () => {
+  const { getSession } = await import('../lib/session')
+  return await getSession()
+})
+
+const getUserProfileFn = createServerFn().handler(async () => {
+  const { getSession } = await import('../lib/session')
   const session = await getSession()
-  return session
+  if (!session) throw new Error('Unauthorized')
+  await connectToDatabase()
+  const user = await UserModel.findById(session.userId).select('email username plan').lean() as any
+  if (!user) throw new Error('User not found')
+  return {
+    email: user.email as string,
+    username: (user.username ?? '') as string,
+    plan: (user.plan ?? 'free') as 'free' | 'pro',
+  }
 })
 
 export const Route = createFileRoute('/dashboard')({
   beforeLoad: async () => {
-    const session = await getSessionFn()
-    if (!session) {
-      throw redirect({ to: '/auth/login' })
-    }
+    const session = await checkSessionFn()
+    if (!session) throw redirect({ to: '/auth/login' })
     return { userId: session.userId }
   },
+  loader: async () => getUserProfileFn(),
   component: DashboardLayout,
 })
 
 function DashboardLayout() {
   const navigate = useNavigate()
   const matches = useMatches()
+  const { email, username, plan } = Route.useLoaderData()
 
-  // Determine active nav from current route
   const currentPath = matches[matches.length - 1]?.fullPath || ''
-  const activeNav = currentPath.includes('account')
-    ? 'account'
-    : currentPath.includes('anonymous-messages')
-    ? 'anonymous-message'
-    : currentPath.includes('link-shortener')
-      ? 'link-shortener'
-      : currentPath.includes('qr-code')
-        ? 'qr-code'
-        : currentPath.includes('polls')
-          ? 'polls'
-          : currentPath.includes('insights')
-            ? 'insights'
-            : currentPath.includes('design')
-              ? 'design'
-              : 'links'
+  const activeNav = currentPath.includes('account') ? 'account'
+    : currentPath.includes('link-shortener') ? 'link-shortener'
+    : currentPath.includes('qr-code') ? 'qr-code'
+    : currentPath.includes('polls') ? 'polls'
+    : currentPath.includes('insights') ? 'insights'
+    : currentPath.includes('design') ? 'design'
+    : 'links'
 
   function handleNavigate(id: string) {
-    if (id === 'account') {
-      navigate({ to: '/dashboard/account' })
-    } else if (id === 'anonymous-message') {
-      navigate({ to: '/dashboard/anonymous-messages' })
-    } else if (id === 'link-shortener') {
-      navigate({ to: '/dashboard/link-shortener' })
-    } else if (id === 'qr-code') {
-      navigate({ to: '/dashboard/qr-code' })
-    } else if (id === 'polls') {
-      navigate({ to: '/dashboard/polls' })
-    } else if (id === 'insights') {
-      navigate({ to: '/dashboard/insights' })
-    } else if (id === 'design') {
-      navigate({ to: '/dashboard/design' })
-    } else if (id === 'links') {
-      navigate({ to: '/dashboard' })
+    const routes: Record<string, string> = {
+      account: '/dashboard/account',
+      'link-shortener': '/dashboard/link-shortener',
+      'qr-code': '/dashboard/qr-code',
+      polls: '/dashboard/polls',
+      insights: '/dashboard/insights',
+      design: '/dashboard/design',
+      links: '/dashboard',
     }
+    navigate({ to: (routes[id] ?? '/dashboard') as any })
   }
 
   return (
     <div className="flex h-dvh flex-col overflow-hidden bg-gray-50/60">
-      {/* Main layout: sidebar + content */}
       <div className="flex min-h-0 flex-1">
-        {/* Sidebar — hidden on mobile */}
         <div className="hidden lg:block">
-          <Sidebar activeItem={activeNav} onNavigate={handleNavigate} />
+          <Sidebar activeItem={activeNav} onNavigate={handleNavigate} username={username} email={email} plan={plan} />
         </div>
-
-        {/* Content area */}
         <main className="flex min-h-0 flex-1 overflow-y-auto">
           <Outlet />
         </main>
       </div>
-
-      {/* Mobile bottom nav */}
       <div className="flex items-center justify-around border-t border-gray-200 bg-white py-2 lg:hidden pb-safe">
         {[
           { id: 'links', icon: <TreePine size={20} />, label: 'Links' },
@@ -92,9 +79,7 @@ function DashboardLayout() {
           { id: 'polls', icon: <BarChart size={20} />, label: 'Polls' },
           { id: 'account', icon: <User size={20} />, label: 'Account' },
         ].map((item) => (
-          <button
-            key={item.id}
-            onClick={() => handleNavigate(item.id)}
+          <button key={item.id} onClick={() => handleNavigate(item.id)}
             className={`flex cursor-pointer flex-col items-center gap-1 border-none bg-transparent transition-colors ${
               activeNav === item.id ? 'text-[#1069f9]' : 'text-gray-400 hover:text-gray-600'
             }`}

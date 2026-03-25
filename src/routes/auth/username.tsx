@@ -8,7 +8,6 @@ import { z } from 'zod'
 import { useState, useEffect, useRef } from 'react'
 import connectToDatabase from '../../lib/db'
 import User from '../../models/User'
-import { getSession } from '../../lib/session'
 
 // ── Server functions ──────────────────────────────────────────────────────────
 
@@ -23,6 +22,8 @@ const checkUsernameFn = createServerFn()
 const saveUsernameFn = createServerFn({ method: 'POST' })
   .inputValidator(z.object({ username: z.string().min(3).max(30).regex(/^[a-zA-Z0-9._]+$/) }))
   .handler(async ({ data }) => {
+    const { getSession } = await import('../../lib/session')
+
     const session = await getSession()
     if (!session) throw new Error('Unauthorized')
     await connectToDatabase()

@@ -1,3 +1,5 @@
+// This file is imported ONLY inside createServerFn handlers.
+// Never import this at the top level of a route file.
 import { SignJWT, jwtVerify } from 'jose'
 import { setCookie, getCookie } from '@tanstack/react-start/server'
 
@@ -16,7 +18,7 @@ export async function createSession(userId: string) {
     httpOnly: true,
     sameSite: 'lax',
     path: '/',
-    maxAge: 60 * 60 * 24 * 7, // 7 days
+    maxAge: 60 * 60 * 24 * 7,
     secure: process.env.NODE_ENV === 'production',
   })
 }

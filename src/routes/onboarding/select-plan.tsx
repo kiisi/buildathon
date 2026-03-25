@@ -6,7 +6,6 @@ import { z } from 'zod'
 import { useState } from 'react'
 import connectToDatabase from '../../lib/db'
 import User from '../../models/User'
-import { getSession } from '../../lib/session'
 
 // Interswitch global
 declare global {
@@ -19,6 +18,8 @@ declare global {
 
 /** Fetch the logged-in user's email + username for the payment request */
 const getUserInfoFn = createServerFn().handler(async () => {
+  const { getSession } = await import('../../lib/session')
+
   const session = await getSession()
   if (!session) throw new Error('Unauthorized')
   await connectToDatabase()
@@ -29,6 +30,8 @@ const getUserInfoFn = createServerFn().handler(async () => {
 
 /** Save free plan directly */
 const selectFreePlanFn = createServerFn({ method: 'POST' }).handler(async () => {
+  const { getSession } = await import('../../lib/session')
+
   const session = await getSession()
   if (!session) throw new Error('Unauthorized')
   await connectToDatabase()
@@ -45,6 +48,8 @@ const verifyAndUpgradeFn = createServerFn({ method: 'POST' })
     }),
   )
   .handler(async ({ data }) => {
+    const { getSession } = await import('../../lib/session')
+
     const session = await getSession()
     if (!session) throw new Error('Unauthorized')
 

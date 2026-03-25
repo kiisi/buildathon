@@ -7,6 +7,7 @@ const UserSchema = new mongoose.Schema(
     username: { type: String, unique: true, sparse: true, default: null },
     plan: { type: String, enum: ['free', 'pro'], default: 'free' },
     lastTxnRef: { type: String, default: null },
+    planRenewsAt: { type: Date, default: null },
   },
   { timestamps: true },
 )

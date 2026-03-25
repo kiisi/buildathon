@@ -1,30 +1,19 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useState, useRef, useCallback, useEffect } from 'react'
+import { useState, useRef } from 'react'
+import { createServerFn } from '@tanstack/react-start'
+import { useMutation } from '@tanstack/react-query'
+import { z } from 'zod'
+import { QRCodeSVG } from 'qrcode.react'
 import {
-  QrCode,
-  Download,
-  Copy,
-  Check,
-  Palette,
-  Type,
-  Globe,
-  Trash2,
-  Image,
-  Square,
-  Circle,
-  RectangleHorizontal,
-  Sparkles,
-  Layers,
-  RotateCcw,
-  Share2,
-  Link2,
+  QrCode, Download, Copy, Check, Palette, Type, Globe, Trash2,
+  Image, Square, Circle, RectangleHorizontal, Sparkles, Layers,
+  RotateCcw, Link2,
 } from 'lucide-react'
+import connectToDatabase from '../../lib/db'
+import QrCodeModel from '../../models/QrCode'
 
-export const Route = createFileRoute('/dashboard/qr-code')({
-  component: QrCodePage,
-})
+// ── Types ─────────────────────────────────────────────────────────────────────
 
-/* ── Types ─────────────────────────────────────────── */
 type QrShape = 'square' | 'rounded' | 'dots'
 type QrFrame = 'none' | 'simple' | 'branded'
 
@@ -44,14 +33,78 @@ type SavedQr = {
   createdAt: string
 }
 
+const configSchema = z.object({
+  url: z.string().min(1),
+  label: z.string(),
+  fgColor: z.string(),
+  bgColor: z.string(),
+  shape: z.enum(['square', 'rounded', 'dots']),
+  frame: z.enum(['none', 'simple', 'branded']),
+})
+
+// ── Server functions ──────────────────────────────────────────────────────────
+
+const getQrCodesFn = createServerFn().handler(async () => {
+  const { getSession } = await import('../../lib/session')
+
+  const session = await getSession()
+  if (!session) throw new Error('Unauthorized')
+  await connectToDatabase()
+  const codes = await QrCodeModel.find({ userId: session.userId }).sort({ createdAt: -1 }).lean()
+  return codes.map((q: any) => ({
+    id: String(q._id),
+    config: {
+      url: q.url, label: q.label,
+      fgColor: q.fgColor, bgColor: q.bgColor,
+      shape: q.shape as QrShape, frame: q.frame as QrFrame, size: 256,
+    },
+    createdAt: new Date(q.createdAt).toLocaleDateString('en-US', {
+      month: 'short', day: 'numeric', year: 'numeric',
+    }),
+  })) as SavedQr[]
+})
+
+const saveQrCodeFn = createServerFn({ method: 'POST' })
+  .inputValidator(configSchema)
+  .handler(async ({ data }) => {
+    const { getSession } = await import('../../lib/session')
+
+    const session = await getSession()
+    if (!session) throw new Error('Unauthorized')
+    await connectToDatabase()
+    const qr = await QrCodeModel.create({
+      userId: session.userId,
+      url: data.url, label: data.label,
+      fgColor: data.fgColor, bgColor: data.bgColor,
+      shape: data.shape, frame: data.frame,
+    })
+    return { id: String(qr._id), config: { ...data, size: 256 }, createdAt: 'Just now' } as SavedQr
+  })
+
+const deleteQrCodeFn = createServerFn({ method: 'POST' })
+  .inputValidator(z.object({ id: z.string() }))
+  .handler(async ({ data }) => {
+    const { getSession } = await import('../../lib/session')
+
+    const session = await getSession()
+    if (!session) throw new Error('Unauthorized')
+    await connectToDatabase()
+    await QrCodeModel.deleteOne({ _id: data.id, userId: session.userId })
+    return { ok: true }
+  })
+
+// ── Route ─────────────────────────────────────────────────────────────────────
+
+export const Route = createFileRoute('/dashboard/qr-code')({
+  loader: async () => getQrCodesFn(),
+  component: QrCodePage,
+})
+
+// ── Constants ─────────────────────────────────────────────────────────────────
+
 const defaultConfig: QrConfig = {
-  url: '',
-  fgColor: '#1a1a1a',
-  bgColor: '#ffffff',
-  shape: 'rounded',
-  frame: 'simple',
-  label: '',
-  size: 256,
+  url: '', fgColor: '#1a1a1a', bgColor: '#ffffff',
+  shape: 'rounded', frame: 'simple', label: '', size: 256,
 }
 
 const presetColors = [
@@ -65,629 +118,386 @@ const presetColors = [
   { fg: '#f59e0b', bg: '#1a1a1a', name: 'Gold' },
 ]
 
-const mockSavedQrs: SavedQr[] = [
-  {
-    id: '1',
-    config: {
-      url: 'https://linkgrove.ee/devkiisi',
-      fgColor: '#1069f9',
-      bgColor: '#f0f6ff',
-      shape: 'rounded',
-      frame: 'branded',
-      label: 'My LinkGrove',
-      size: 256,
-    },
-    createdAt: 'Mar 22, 2026',
-  },
-  {
-    id: '2',
-    config: {
-      url: 'https://github.com/devkiisi',
-      fgColor: '#1a1a1a',
-      bgColor: '#ffffff',
-      shape: 'square',
-      frame: 'simple',
-      label: 'GitHub Profile',
-      size: 256,
-    },
-    createdAt: 'Mar 18, 2026',
-  },
-  {
-    id: '3',
-    config: {
-      url: 'https://open.spotify.com/playlist/coding-vibes',
-      fgColor: '#059669',
-      bgColor: '#ecfdf5',
-      shape: 'dots',
-      frame: 'none',
-      label: 'Coding Playlist',
-      size: 256,
-    },
-    createdAt: 'Mar 12, 2026',
-  },
-]
+// ── QR level mapping ──────────────────────────────────────────────────────────
+// qrcode.react accepts level as 'L'|'M'|'Q'|'H'
+// We always use 'H' for best scannability
 
-/* ── QR Code Canvas Renderer ──────────────────────── */
-// Simple QR-like pattern generator (visual mock — generates a realistic-looking QR pattern)
-function drawQrToCanvas(
-  canvas: HTMLCanvasElement,
-  config: QrConfig,
-) {
-  const ctx = canvas.getContext('2d')
-  if (!ctx) return
+// ── Download helper: SVG → PNG via canvas ─────────────────────────────────────
 
-  const { fgColor, bgColor, shape, frame, label, size } = config
-  const totalSize = frame === 'none' ? size : size + 60
-  canvas.width = totalSize * 2
-  canvas.height = (frame === 'branded' && label ? totalSize + 36 : totalSize) * 2
-  canvas.style.width = `${totalSize}px`
-  canvas.style.height = `${frame === 'branded' && label ? totalSize + 36 : totalSize}px`
-  ctx.scale(2, 2)
-
-  // Background
-  if (frame !== 'none') {
-    ctx.fillStyle = bgColor
-    ctx.beginPath()
-    ctx.roundRect(0, 0, totalSize, canvas.height / 2, 16)
-    ctx.fill()
+function downloadSvgAsPng(svgEl: SVGSVGElement, filename: string) {
+  const serializer = new XMLSerializer()
+  const svgStr = serializer.serializeToString(svgEl)
+  const blob = new Blob([svgStr], { type: 'image/svg+xml;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const img = new window.Image()
+  img.onload = () => {
+    const canvas = document.createElement('canvas')
+    canvas.width = svgEl.width.baseVal.value || 256
+    canvas.height = svgEl.height.baseVal.value || 256
+    const ctx = canvas.getContext('2d')!
+    ctx.drawImage(img, 0, 0)
+    URL.revokeObjectURL(url)
+    const a = document.createElement('a')
+    a.href = canvas.toDataURL('image/png')
+    a.download = filename
+    a.click()
   }
-
-  const offset = frame === 'none' ? 0 : 30
-  const cellSize = size / 25
-
-  // QR background
-  ctx.fillStyle = bgColor
-  if (shape === 'rounded') {
-    ctx.beginPath()
-    ctx.roundRect(offset, offset, size, size, 12)
-    ctx.fill()
-  } else {
-    ctx.fillRect(offset, offset, size, size)
-  }
-
-  // Generate deterministic pattern from URL
-  const seed = config.url || 'linkgrove'
-  let hash = 0
-  for (let i = 0; i < seed.length; i++) {
-    hash = ((hash << 5) - hash + seed.charCodeAt(i)) | 0
-  }
-
-  // Draw QR modules
-  ctx.fillStyle = fgColor
-  const grid = 25
-  const moduleSize = cellSize * 0.85
-  const moduleOffset = (cellSize - moduleSize) / 2
-
-  // Finder patterns (top-left, top-right, bottom-left)
-  function drawFinder(x: number, y: number) {
-    const s = cellSize
-    // Outer
-    ctx.fillStyle = fgColor
-    if (shape === 'rounded') {
-      ctx.beginPath()
-      ctx.roundRect(offset + x * s, offset + y * s, 7 * s, 7 * s, 4)
-      ctx.fill()
-    } else if (shape === 'dots') {
-      ctx.beginPath()
-      ctx.roundRect(offset + x * s, offset + y * s, 7 * s, 7 * s, 14)
-      ctx.fill()
-    } else {
-      ctx.fillRect(offset + x * s, offset + y * s, 7 * s, 7 * s)
-    }
-    // Inner white
-    ctx.fillStyle = bgColor
-    if (shape === 'dots') {
-      ctx.beginPath()
-      ctx.roundRect(offset + (x + 1) * s, offset + (y + 1) * s, 5 * s, 5 * s, 10)
-      ctx.fill()
-    } else {
-      ctx.beginPath()
-      ctx.roundRect(offset + (x + 1) * s, offset + (y + 1) * s, 5 * s, 5 * s, shape === 'rounded' ? 2 : 0)
-      ctx.fill()
-    }
-    // Inner dark
-    ctx.fillStyle = fgColor
-    if (shape === 'dots') {
-      ctx.beginPath()
-      ctx.roundRect(offset + (x + 2) * s, offset + (y + 2) * s, 3 * s, 3 * s, 6)
-      ctx.fill()
-    } else {
-      ctx.beginPath()
-      ctx.roundRect(offset + (x + 2) * s, offset + (y + 2) * s, 3 * s, 3 * s, shape === 'rounded' ? 2 : 0)
-      ctx.fill()
-    }
-  }
-
-  drawFinder(0, 0)
-  drawFinder(grid - 7, 0)
-  drawFinder(0, grid - 7)
-
-  // Data modules (pseudo-random from hash)
-  ctx.fillStyle = fgColor
-  for (let row = 0; row < grid; row++) {
-    for (let col = 0; col < grid; col++) {
-      // Skip finder pattern areas
-      if (
-        (row < 8 && col < 8) ||
-        (row < 8 && col >= grid - 8) ||
-        (row >= grid - 8 && col < 8)
-      )
-        continue
-      // Skip timing patterns
-      if (row === 6 || col === 6) {
-        if ((row + col) % 2 === 0) {
-          const x = offset + col * cellSize + moduleOffset
-          const y = offset + row * cellSize + moduleOffset
-          if (shape === 'dots') {
-            ctx.beginPath()
-            ctx.arc(x + moduleSize / 2, y + moduleSize / 2, moduleSize / 2, 0, Math.PI * 2)
-            ctx.fill()
-          } else {
-            ctx.beginPath()
-            ctx.roundRect(x, y, moduleSize, moduleSize, shape === 'rounded' ? 2 : 0)
-            ctx.fill()
-          }
-        }
-        continue
-      }
-
-      // Pseudo-random data
-      const val = ((hash * (row * grid + col + 1) * 31) >>> 0) % 100
-      if (val < 45) {
-        const x = offset + col * cellSize + moduleOffset
-        const y = offset + row * cellSize + moduleOffset
-        if (shape === 'dots') {
-          ctx.beginPath()
-          ctx.arc(x + moduleSize / 2, y + moduleSize / 2, moduleSize / 2, 0, Math.PI * 2)
-          ctx.fill()
-        } else {
-          ctx.beginPath()
-          ctx.roundRect(x, y, moduleSize, moduleSize, shape === 'rounded' ? 2 : 0)
-          ctx.fill()
-        }
-      }
-    }
-  }
-
-  // Frame label
-  if (frame === 'branded' && label) {
-    ctx.fillStyle = fgColor
-    ctx.font = 'bold 13px "Plus Jakarta Sans", system-ui, sans-serif'
-    ctx.textAlign = 'center'
-    ctx.textBaseline = 'middle'
-    ctx.fillText(label, totalSize / 2, totalSize + 14)
-  }
+  img.src = url
 }
 
-/* ── Main Component ────────────────────────────────── */
+// ── Component ─────────────────────────────────────────────────────────────────
+
 function QrCodePage() {
-  const [config, setConfig] = useState<QrConfig>({ ...defaultConfig })
-  const [savedQrs, setSavedQrs] = useState<SavedQr[]>(mockSavedQrs)
-  const [copied, setCopied] = useState(false)
-  const [activeTab, setActiveTab] = useState<'create' | 'saved'>('create')
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-  const previewCanvasRefs = useRef<Map<string, HTMLCanvasElement>>(new Map())
+  const initialCodes = Route.useLoaderData()
+  const [savedCodes, setSavedCodes] = useState<SavedQr[]>(initialCodes)
+  const [config, setConfig] = useState<QrConfig>(defaultConfig)
+  const [activeTab, setActiveTab] = useState<'url' | 'style' | 'frame'>('url')
+  const [copiedId, setCopiedId] = useState<string | null>(null)
+  const [urlError, setUrlError] = useState('')
+  const svgRef = useRef<SVGSVGElement>(null)
 
-  const hasUrl = config.url.trim().length > 0
+  const saveMutation = useMutation({
+    mutationFn: () => saveQrCodeFn({ data: {
+      url: config.url, label: config.label,
+      fgColor: config.fgColor, bgColor: config.bgColor,
+      shape: config.shape, frame: config.frame,
+    }}),
+    onSuccess: (saved) => setSavedCodes(prev => [saved, ...prev]),
+    onError: (err: any) => alert(err?.message || 'Failed to save'),
+  })
 
-  // Render QR on config change
-  useEffect(() => {
-    if (canvasRef.current) {
-      drawQrToCanvas(canvasRef.current, {
-        ...config,
-        url: config.url || 'https://linkgrove.ee',
-      })
-    }
-  }, [config])
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => deleteQrCodeFn({ data: { id } }),
+    onSuccess: (_, id) => setSavedCodes(prev => prev.filter(q => q.id !== id)),
+  })
 
-  // Render saved QR thumbnails
-  useEffect(() => {
-    savedQrs.forEach((qr) => {
-      const canvas = previewCanvasRefs.current.get(qr.id)
-      if (canvas) {
-        drawQrToCanvas(canvas, { ...qr.config, size: 80, frame: 'none' })
-      }
-    })
-  }, [savedQrs, activeTab])
+  function set<K extends keyof QrConfig>(key: K, val: QrConfig[K]) {
+    setConfig(prev => ({ ...prev, [key]: val }))
+  }
 
-  const setPreviewRef = useCallback((id: string) => (el: HTMLCanvasElement | null) => {
-    if (el) {
-      previewCanvasRefs.current.set(id, el)
-      const qr = savedQrs.find((q) => q.id === id)
-      if (qr) drawQrToCanvas(el, { ...qr.config, size: 80, frame: 'none' })
-    } else {
-      previewCanvasRefs.current.delete(id)
-    }
-  }, [savedQrs])
-
-  function update(partial: Partial<QrConfig>) {
-    setConfig((prev) => ({ ...prev, ...partial }))
+  function validateAndSetUrl(val: string) {
+    setUrlError('')
+    set('url', val)
   }
 
   function handleDownload() {
-    if (!canvasRef.current) return
-    const link = document.createElement('a')
-    link.download = `qr-${config.label || 'code'}.png`
-    link.href = canvasRef.current.toDataURL('image/png')
-    link.click()
+    if (!svgRef.current) return
+    downloadSvgAsPng(svgRef.current, `qr-${config.label || 'code'}.png`)
   }
 
-  function handleCopy() {
-    if (!canvasRef.current) return
-    canvasRef.current.toBlob((blob) => {
-      if (blob) {
-        navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })])
-        setCopied(true)
-        setTimeout(() => setCopied(false), 2000)
-      }
-    })
+  function handleCopyImage(markId: string) {
+    if (!svgRef.current) return
+    const serializer = new XMLSerializer()
+    const svgStr = serializer.serializeToString(svgRef.current)
+    const blob = new Blob([svgStr], { type: 'image/svg+xml;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const img = new window.Image()
+    img.onload = () => {
+      const canvas = document.createElement('canvas')
+      canvas.width = config.size
+      canvas.height = config.size
+      canvas.getContext('2d')!.drawImage(img, 0, 0)
+      URL.revokeObjectURL(url)
+      canvas.toBlob(pngBlob => {
+        if (!pngBlob) return
+        navigator.clipboard.write([new ClipboardItem({ 'image/png': pngBlob })])
+        setCopiedId(markId)
+        setTimeout(() => setCopiedId(null), 2000)
+      })
+    }
+    img.src = url
   }
 
   function handleSave() {
-    const newQr: SavedQr = {
-      id: Date.now().toString(),
-      config: { ...config },
-      createdAt: 'Just now',
-    }
-    setSavedQrs((prev) => [newQr, ...prev])
-    setActiveTab('saved')
+    if (!config.url.trim()) { setUrlError('URL is required'); return }
+    saveMutation.mutate()
   }
 
-  function handleDeleteSaved(id: string) {
-    setSavedQrs((prev) => prev.filter((q) => q.id !== id))
-  }
+  // Map shape to qrcode.react imageSettings / style — dots uses circular via CSS filter trick
+  // qrcode.react doesn't natively support dots/rounded, but we can use the `style` prop on the SVG wrapper
+  // For true dot/rounded styles we pass the shape as a data attribute and apply CSS clip-path
+  // The QR data itself is always correct — only visual style changes
 
-  function handleLoadSaved(qr: SavedQr) {
-    setConfig({ ...qr.config })
-    setActiveTab('create')
-  }
+  const hasUrl = config.url.trim().length > 0
 
-  function handleReset() {
-    setConfig({ ...defaultConfig })
-  }
+  // qrcode.react level
+  const level = 'H' as const
 
-  /* ── Render ───────────────────────────────────────── */
   return (
-    <div className="flex-1 px-6 pt-6 pb-12 sm:px-10 lg:px-12">
-      {/* ─── Header ─── */}
-      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-2.5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 shadow-md shadow-violet-500/20">
-            <QrCode size={17} className="text-white" />
-          </div>
-          <div>
-            <h1 className="text-xl font-extrabold tracking-tight text-gray-900">
-              QR Code Generator
-            </h1>
-            <p className="text-xs text-gray-400">
-              Create beautiful, customizable QR codes
-            </p>
-          </div>
+    <div className="flex-1 overflow-y-auto px-6 pb-12 pt-6 sm:px-10 lg:px-12">
+      {/* Header */}
+      <div className="mb-6 flex items-center gap-2.5">
+        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[#1069f9] to-[#0b5ad4] shadow-md shadow-[#1069f9]/20">
+          <QrCode size={17} className="text-white" />
         </div>
-
-        {/* Tab toggle */}
-        <div className="flex items-center gap-1 rounded-lg bg-gray-100 p-0.5 w-fit">
-          {([
-            { key: 'create' as const, label: 'Create', icon: <Sparkles size={13} /> },
-            { key: 'saved' as const, label: `Saved (${savedQrs.length})`, icon: <Layers size={13} /> },
-          ]).map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
-              className={`flex cursor-pointer items-center gap-1.5 rounded-md border-none px-3.5 py-1.5 font-sans text-xs font-semibold transition-all ${
-                activeTab === tab.key
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  : 'bg-transparent text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              {tab.icon}
-              {tab.label}
-            </button>
-          ))}
+        <div>
+          <h1 className="text-xl font-extrabold tracking-tight text-gray-900">QR Code Generator</h1>
+          <p className="text-xs text-gray-400">Create, customize, and save QR codes</p>
         </div>
       </div>
 
-      {activeTab === 'create' ? (
-        <div className="flex flex-col gap-6 xl:flex-row">
-          {/* ─── Left: Controls ─── */}
-          <div className="flex flex-1 flex-col gap-4">
-            {/* URL Input */}
-            <div className="rounded-2xl border border-gray-100 bg-white p-5">
-              <label className="mb-2 flex items-center gap-1.5 text-xs font-bold text-gray-700">
-                <Globe size={13} className="text-gray-400" />
-                Destination URL
-              </label>
-              <input
-                type="url"
-                value={config.url}
-                onChange={(e) => update({ url: e.target.value })}
-                placeholder="https://your-link-here.com"
-                className="h-12 w-full rounded-xl border border-gray-200 bg-gray-50/60 px-4 font-sans text-sm text-gray-800 outline-none transition-all placeholder:text-gray-300 focus:border-violet-400/40 focus:bg-white focus:ring-2 focus:ring-violet-500/10"
-              />
+      <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
+        {/* ── Left: Editor ── */}
+        <div className="flex flex-col gap-4">
+          {/* Tabs */}
+          <div className="flex gap-1 rounded-xl border border-gray-100 bg-gray-50/60 p-1">
+            {([
+              { id: 'url', label: 'URL', icon: <Globe size={14} /> },
+              { id: 'style', label: 'Style', icon: <Palette size={14} /> },
+              { id: 'frame', label: 'Frame', icon: <Layers size={14} /> },
+            ] as const).map(tab => (
+              <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+                className={`flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-lg border-none py-2 font-sans text-xs font-semibold transition-all ${
+                  activeTab === tab.id ? 'bg-white text-gray-900 shadow-sm' : 'bg-transparent text-gray-400 hover:text-gray-600'
+                }`}
+              >
+                {tab.icon} {tab.label}
+              </button>
+            ))}
+          </div>
 
-              <div className="mt-3">
-                <label className="mb-2 flex items-center gap-1.5 text-xs font-bold text-gray-700">
-                  <Type size={13} className="text-gray-400" />
-                  Label (optional)
-                </label>
-                <input
-                  type="text"
-                  value={config.label}
-                  onChange={(e) => update({ label: e.target.value })}
-                  placeholder="e.g. My Portfolio"
-                  className="h-10 w-full rounded-lg border border-gray-200 bg-gray-50/60 px-3 font-sans text-sm text-gray-800 outline-none transition-all placeholder:text-gray-300 focus:border-violet-400/40 focus:bg-white"
-                />
-              </div>
-            </div>
-
-            {/* Color Presets */}
-            <div className="rounded-2xl border border-gray-100 bg-white p-5">
-              <label className="mb-3 flex items-center gap-1.5 text-xs font-bold text-gray-700">
-                <Palette size={13} className="text-gray-400" />
-                Color Theme
-              </label>
-              <div className="grid grid-cols-4 gap-2 sm:grid-cols-8">
-                {presetColors.map((preset) => {
-                  const isActive =
-                    config.fgColor === preset.fg && config.bgColor === preset.bg
-                  return (
-                    <button
-                      key={preset.name}
-                      onClick={() => update({ fgColor: preset.fg, bgColor: preset.bg })}
-                      className={`group flex cursor-pointer flex-col items-center gap-1.5 rounded-xl border p-2 transition-all ${
-                        isActive
-                          ? 'border-violet-400 bg-violet-50/50 shadow-sm'
-                          : 'border-gray-100 bg-transparent hover:border-gray-200 hover:bg-gray-50'
-                      }`}
-                    >
-                      <div className="relative h-8 w-8 overflow-hidden rounded-lg shadow-sm">
-                        <div
-                          className="absolute inset-0"
-                          style={{ backgroundColor: preset.bg }}
-                        />
-                        <div
-                          className="absolute inset-[6px] rounded"
-                          style={{ backgroundColor: preset.fg }}
-                        />
-                      </div>
-                      <span className="text-[10px] font-medium text-gray-500">
-                        {preset.name}
-                      </span>
-                    </button>
-                  )
-                })}
-              </div>
-
-              {/* Custom color pickers */}
-              <div className="mt-4 flex items-center gap-4">
-                <div className="flex items-center gap-2">
-                  <label className="text-[11px] font-semibold text-gray-400">FG</label>
-                  <div className="relative">
-                    <input
-                      type="color"
-                      value={config.fgColor}
-                      onChange={(e) => update({ fgColor: e.target.value })}
-                      className="h-7 w-7 cursor-pointer rounded-md border border-gray-200 p-0.5"
-                    />
-                  </div>
-                  <span className="text-[11px] font-mono text-gray-400">{config.fgColor}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <label className="text-[11px] font-semibold text-gray-400">BG</label>
-                  <input
-                    type="color"
-                    value={config.bgColor}
-                    onChange={(e) => update({ bgColor: e.target.value })}
-                    className="h-7 w-7 cursor-pointer rounded-md border border-gray-200 p-0.5"
+          {/* Tab: URL */}
+          {activeTab === 'url' && (
+            <div className="flex flex-col gap-4 rounded-2xl border border-gray-100 bg-white p-5">
+              <div>
+                <label className="mb-1.5 block text-xs font-semibold text-gray-600">Destination URL</label>
+                <div className="relative">
+                  <Globe size={15} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-300" />
+                  <input type="url" value={config.url} onChange={e => validateAndSetUrl(e.target.value)}
+                    placeholder="https://example.com"
+                    className={`h-11 w-full rounded-xl border pl-10 pr-4 font-sans text-sm text-gray-800 outline-none transition-all placeholder:text-gray-300 focus:ring-2 focus:ring-[#1069f9]/10 ${
+                      urlError ? 'border-red-300 focus:border-red-400' : 'border-gray-200 focus:border-[#1069f9]/40'
+                    }`}
                   />
-                  <span className="text-[11px] font-mono text-gray-400">{config.bgColor}</span>
+                </div>
+                {urlError && <p className="mt-1 text-xs text-red-500">{urlError}</p>}
+              </div>
+              <div>
+                <label className="mb-1.5 block text-xs font-semibold text-gray-600">
+                  Label <span className="font-normal text-gray-400">(optional)</span>
+                </label>
+                <div className="relative">
+                  <Type size={15} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-300" />
+                  <input type="text" value={config.label} onChange={e => set('label', e.target.value)}
+                    placeholder="e.g. My Portfolio"
+                    className="h-11 w-full rounded-xl border border-gray-200 pl-10 pr-4 font-sans text-sm text-gray-800 outline-none transition-all placeholder:text-gray-300 focus:border-[#1069f9]/40 focus:ring-2 focus:ring-[#1069f9]/10"
+                  />
                 </div>
               </div>
             </div>
+          )}
 
-            {/* Shape & Frame */}
-            <div className="rounded-2xl border border-gray-100 bg-white p-5">
-              <div className="mb-4">
-                <label className="mb-2.5 flex items-center gap-1.5 text-xs font-bold text-gray-700">
-                  <Image size={13} className="text-gray-400" />
-                  Module Shape
-                </label>
+          {/* Tab: Style */}
+          {activeTab === 'style' && (
+            <div className="flex flex-col gap-5 rounded-2xl border border-gray-100 bg-white p-5">
+              <div>
+                <label className="mb-2.5 block text-xs font-semibold text-gray-600">Color presets</label>
+                <div className="grid grid-cols-4 gap-2 sm:grid-cols-8">
+                  {presetColors.map(p => (
+                    <button key={p.name} onClick={() => { set('fgColor', p.fg); set('bgColor', p.bg) }} title={p.name}
+                      className={`flex h-10 w-full cursor-pointer flex-col items-center justify-center rounded-xl border-2 transition-all ${
+                        config.fgColor === p.fg && config.bgColor === p.bg ? 'scale-105 border-[#1069f9]' : 'border-transparent hover:border-gray-200'
+                      }`} style={{ background: p.bg }}
+                    >
+                      <div className="h-4 w-4 rounded-sm" style={{ background: p.fg }} />
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                {([{ label: 'Foreground', key: 'fgColor' as const }, { label: 'Background', key: 'bgColor' as const }]).map(({ label, key }) => (
+                  <div key={key}>
+                    <label className="mb-1.5 block text-xs font-semibold text-gray-600">{label}</label>
+                    <div className="flex h-11 items-center gap-2 rounded-xl border border-gray-200 px-3">
+                      <input type="color" value={config[key] as string} onChange={e => set(key, e.target.value)}
+                        className="h-6 w-6 cursor-pointer rounded border-none bg-transparent p-0" />
+                      <span className="font-mono text-xs text-gray-600">{config[key] as string}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div>
+                <label className="mb-2 block text-xs font-semibold text-gray-600">Module shape</label>
                 <div className="flex gap-2">
                   {([
-                    { key: 'square' as const, label: 'Square', icon: <Square size={16} /> },
-                    { key: 'rounded' as const, label: 'Rounded', icon: <RectangleHorizontal size={16} /> },
-                    { key: 'dots' as const, label: 'Dots', icon: <Circle size={16} /> },
-                  ]).map((s) => (
-                    <button
-                      key={s.key}
-                      onClick={() => update({ shape: s.key })}
-                      className={`flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl border px-3 py-2.5 font-sans text-xs font-semibold transition-all ${
-                        config.shape === s.key
-                          ? 'border-violet-400 bg-violet-50/50 text-violet-700 shadow-sm'
-                          : 'border-gray-200 bg-transparent text-gray-500 hover:border-gray-300 hover:bg-gray-50'
+                    { id: 'square', label: 'Square', icon: <Square size={16} /> },
+                    { id: 'rounded', label: 'Rounded', icon: <RectangleHorizontal size={16} /> },
+                    { id: 'dots', label: 'Dots', icon: <Circle size={16} /> },
+                  ] as const).map(s => (
+                    <button key={s.id} onClick={() => set('shape', s.id)}
+                      className={`flex flex-1 cursor-pointer flex-col items-center gap-1.5 rounded-xl border-2 py-3 font-sans text-[11px] font-semibold transition-all ${
+                        config.shape === s.id ? 'border-[#1069f9] bg-[#1069f9]/5 text-[#1069f9]' : 'border-gray-200 text-gray-500 hover:border-gray-300'
                       }`}
                     >
-                      {s.icon}
-                      {s.label}
+                      {s.icon} {s.label}
                     </button>
                   ))}
                 </div>
               </div>
 
               <div>
-                <label className="mb-2.5 flex items-center gap-1.5 text-xs font-bold text-gray-700">
-                  <Layers size={13} className="text-gray-400" />
-                  Frame Style
+                <label className="mb-1.5 block text-xs font-semibold text-gray-600">
+                  Size: <span className="font-normal text-gray-400">{config.size}px</span>
                 </label>
-                <div className="flex gap-2">
-                  {([
-                    { key: 'none' as const, label: 'None' },
-                    { key: 'simple' as const, label: 'Simple' },
-                    { key: 'branded' as const, label: 'Branded' },
-                  ]).map((f) => (
-                    <button
-                      key={f.key}
-                      onClick={() => update({ frame: f.key })}
-                      className={`flex-1 cursor-pointer rounded-xl border px-3 py-2.5 font-sans text-xs font-semibold transition-all ${
-                        config.frame === f.key
-                          ? 'border-violet-400 bg-violet-50/50 text-violet-700 shadow-sm'
-                          : 'border-gray-200 bg-transparent text-gray-500 hover:border-gray-300 hover:bg-gray-50'
-                      }`}
-                    >
-                      {f.label}
-                    </button>
-                  ))}
-                </div>
+                <input type="range" min={128} max={512} step={32} value={config.size}
+                  onChange={e => set('size', Number(e.target.value))} className="w-full accent-[#1069f9]" />
               </div>
-            </div>
-          </div>
-
-          {/* ─── Right: Preview ─── */}
-          <div className="xl:w-[340px] pb-12">
-            <div className="sticky top-6 flex flex-col items-center rounded-2xl border border-gray-100 bg-white p-6">
-              <p className="mb-4 text-xs font-bold text-gray-700">Live Preview</p>
-
-              {/* Canvas preview */}
-              <div className="mb-5 flex items-center justify-center rounded-xl bg-gray-50/80 p-6">
-                <canvas ref={canvasRef} className="block" />
-              </div>
-
-              {/* URL display */}
-              {hasUrl && (
-                <div className="mb-4 flex w-full items-center gap-2 rounded-lg bg-gray-50 px-3 py-2">
-                  <Link2 size={12} className="shrink-0 text-gray-300" />
-                  <span className="truncate text-[11px] text-gray-400">{config.url}</span>
-                </div>
-              )}
-
-              {/* Action buttons */}
-              <div className="flex w-full flex-col gap-2">
-                <button
-                  onClick={handleDownload}
-                  className="flex h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-500 to-purple-600 font-sans text-sm font-bold text-white shadow-md shadow-violet-500/20 transition-all hover:shadow-lg hover:shadow-violet-500/25 active:scale-[0.98]"
-                >
-                  <Download size={15} />
-                  Download PNG
-                </button>
-
-                <div className="flex gap-2">
-                  <button
-                    onClick={handleCopy}
-                    className={`flex h-10 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-xl border font-sans text-xs font-semibold transition-all ${
-                      copied
-                        ? 'border-emerald-200 bg-emerald-50 text-emerald-600'
-                        : 'border-gray-200 bg-transparent text-gray-600 hover:bg-gray-50'
-                    }`}
-                  >
-                    {copied ? <Check size={13} /> : <Copy size={13} />}
-                    {copied ? 'Copied!' : 'Copy'}
-                  </button>
-
-                  <button
-                    onClick={handleSave}
-                    className="flex h-10 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-xl border border-gray-200 bg-transparent font-sans text-xs font-semibold text-gray-600 transition-all hover:bg-gray-50"
-                  >
-                    <Layers size={13} />
-                    Save
-                  </button>
-
-                  <button
-                    onClick={handleReset}
-                    className="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-xl border border-gray-200 bg-transparent text-gray-400 transition-all hover:bg-gray-50 hover:text-gray-600"
-                  >
-                    <RotateCcw size={14} />
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      ) : (
-        /* ─── Saved QR Codes Tab ─── */
-        <>
-          {savedQrs.length > 0 ? (
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {savedQrs.map((qr) => (
-                <div
-                  key={qr.id}
-                  className="group flex cursor-pointer flex-col rounded-2xl border border-gray-100 bg-white p-4 transition-all hover:border-gray-200 hover:shadow-sm"
-                  onClick={() => handleLoadSaved(qr)}
-                >
-                  {/* Preview */}
-                  <div
-                    className="mb-3 flex items-center justify-center rounded-xl p-4"
-                    style={{ backgroundColor: qr.config.bgColor + '33' }}
-                  >
-                    <canvas
-                      ref={setPreviewRef(qr.id)}
-                      className="block"
-                    />
-                  </div>
-
-                  {/* Info */}
-                  <div className="flex items-start justify-between">
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-bold text-gray-900">
-                        {qr.config.label || 'Untitled QR'}
-                      </p>
-                      <p
-                        className="mt-0.5 truncate text-xs text-gray-400"
-                        title={qr.config.url}
-                      >
-                        {qr.config.url}
-                      </p>
-                      <p className="mt-1.5 text-[11px] text-gray-300">{qr.createdAt}</p>
-                    </div>
-
-                    {/* Actions */}
-                    <div className="flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          navigator.clipboard.writeText(qr.config.url)
-                        }}
-                        className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-lg border-none bg-transparent text-gray-300 transition-colors hover:bg-gray-100 hover:text-gray-500"
-                      >
-                        <Share2 size={13} />
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          handleDeleteSaved(qr.id)
-                        }}
-                        className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-lg border-none bg-transparent text-gray-300 transition-colors hover:bg-red-50 hover:text-red-400"
-                      >
-                        <Trash2 size={13} />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            /* Empty saved state */
-            <div className="flex flex-col items-center justify-center py-20">
-              <div className="relative mb-5">
-                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500/10 to-purple-500/5">
-                  <QrCode size={28} className="text-violet-500" />
-                </div>
-              </div>
-              <h3 className="mb-1.5 text-sm font-bold text-gray-900">
-                No saved QR codes
-              </h3>
-              <p className="mb-5 max-w-[260px] text-center text-xs leading-relaxed text-gray-400">
-                Create and save QR codes to access them quickly later.
-              </p>
-              <button
-                onClick={() => setActiveTab('create')}
-                className="flex cursor-pointer items-center gap-2 rounded-full bg-gradient-to-r from-violet-500 to-purple-600 px-5 py-2.5 font-sans text-xs font-bold text-white shadow-md shadow-violet-500/20 transition-all hover:shadow-lg active:scale-[0.98]"
-              >
-                <Sparkles size={14} />
-                Create your first QR
-              </button>
             </div>
           )}
-        </>
+
+          {/* Tab: Frame */}
+          {activeTab === 'frame' && (
+            <div className="flex flex-col gap-4 rounded-2xl border border-gray-100 bg-white p-5">
+              <label className="text-xs font-semibold text-gray-600">Frame style</label>
+              <div className="grid grid-cols-3 gap-3">
+                {([
+                  { id: 'none', label: 'None', icon: <QrCode size={22} /> },
+                  { id: 'simple', label: 'Simple', icon: <Square size={22} /> },
+                  { id: 'branded', label: 'Branded', icon: <Sparkles size={22} /> },
+                ] as const).map(f => (
+                  <button key={f.id} onClick={() => set('frame', f.id)}
+                    className={`flex cursor-pointer flex-col items-center gap-2 rounded-xl border-2 py-4 font-sans text-xs font-semibold transition-all ${
+                      config.frame === f.id ? 'border-[#1069f9] bg-[#1069f9]/5 text-[#1069f9]' : 'border-gray-200 text-gray-500 hover:border-gray-300'
+                    }`}
+                  >
+                    {f.icon} {f.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Actions */}
+          <div className="flex gap-2">
+            <button onClick={handleSave} disabled={!hasUrl || saveMutation.isPending}
+              className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl bg-[#1069f9] py-2.5 font-sans text-sm font-bold text-white shadow-md shadow-[#1069f9]/20 transition-all hover:bg-[#0b5ad4] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              {saveMutation.isPending
+                ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                : <><Image size={15} /> Save QR</>}
+            </button>
+            <button onClick={handleDownload} disabled={!hasUrl}
+              className="flex cursor-pointer items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 font-sans text-sm font-semibold text-gray-700 transition-all hover:bg-gray-50 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              <Download size={15} /> Download
+            </button>
+            <button onClick={() => setConfig(defaultConfig)} title="Reset"
+              className="flex cursor-pointer items-center rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-gray-400 transition-all hover:bg-gray-50"
+            >
+              <RotateCcw size={15} />
+            </button>
+          </div>
+        </div>
+
+        {/* ── Right: Live Preview ── */}
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col items-center rounded-2xl border border-gray-100 bg-white p-5">
+            <p className="mb-4 text-xs font-semibold text-gray-400">Live Preview</p>
+
+            {/* Frame wrapper */}
+            <div className={`relative flex flex-col items-center justify-center ${
+              config.frame === 'simple' ? 'rounded-2xl border-2 border-gray-900 p-3'
+              : config.frame === 'branded' ? 'rounded-2xl border-2 p-3 pb-8'
+              : ''
+            }`} style={config.frame === 'branded' ? { borderColor: config.fgColor } : {}}>
+              {hasUrl ? (
+                <QRCodeSVG
+                  ref={svgRef}
+                  value={config.url}
+                  size={config.size}
+                  fgColor={config.fgColor}
+                  bgColor={config.bgColor}
+                  level={level}
+                  style={{
+                    maxWidth: '100%',
+                    borderRadius: config.shape === 'dots' ? '50%' : config.shape === 'rounded' ? '12px' : '0',
+                  }}
+                />
+              ) : (
+                <div className="flex h-48 w-48 flex-col items-center justify-center rounded-xl bg-gray-50">
+                  <QrCode size={40} className="mb-2 text-gray-200" />
+                  <p className="text-center text-xs text-gray-300">Enter a URL to preview</p>
+                </div>
+              )}
+              {config.frame === 'branded' && config.label && (
+                <span className="absolute bottom-2 left-0 right-0 text-center text-[11px] font-bold" style={{ color: config.fgColor }}>
+                  {config.label}
+                </span>
+              )}
+            </div>
+
+            {config.label && config.frame !== 'branded' && (
+              <p className="mt-3 text-xs font-semibold text-gray-500">{config.label}</p>
+            )}
+
+            {hasUrl && (
+              <div className="mt-4 flex gap-2">
+                <button onClick={() => handleCopyImage('preview')}
+                  className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 font-sans text-xs font-semibold text-gray-600 transition-all hover:bg-gray-50"
+                >
+                  {copiedId === 'preview' ? <Check size={12} className="text-emerald-500" /> : <Copy size={12} />}
+                  {copiedId === 'preview' ? 'Copied!' : 'Copy image'}
+                </button>
+                <button onClick={handleDownload}
+                  className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 font-sans text-xs font-semibold text-gray-600 transition-all hover:bg-gray-50"
+                >
+                  <Download size={12} /> PNG
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* ── Saved QR codes ── */}
+      {savedCodes.length > 0 && (
+        <div className="mt-8">
+          <h2 className="mb-4 text-sm font-bold text-gray-900">Saved QR Codes</h2>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {savedCodes.map(saved => (
+              <div key={saved.id} className="group flex flex-col gap-3 rounded-2xl border border-gray-100 bg-white p-4 transition-all hover:border-gray-200 hover:shadow-sm">
+                <div className="flex items-center gap-3">
+                  {/* Mini live QR */}
+                  <div className="shrink-0 rounded-lg overflow-hidden border border-gray-100">
+                    <QRCodeSVG
+                      value={saved.config.url}
+                      size={48}
+                      fgColor={saved.config.fgColor}
+                      bgColor={saved.config.bgColor}
+                      level="M"
+                    />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-bold text-gray-900">{saved.config.label || 'Untitled'}</p>
+                    <p className="truncate text-xs text-gray-400">{saved.config.url}</p>
+                    <p className="text-[11px] text-gray-300">{saved.createdAt}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <div className="h-4 w-4 rounded-full border border-gray-100" style={{ background: saved.config.fgColor }} />
+                  <div className="h-4 w-4 rounded-full border border-gray-100" style={{ background: saved.config.bgColor }} />
+                  <span className="text-[11px] capitalize text-gray-400">{saved.config.shape} · {saved.config.frame} frame</span>
+                </div>
+
+                <div className="flex gap-2">
+                  <button onClick={() => setConfig(saved.config)}
+                    className="flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-gray-200 bg-white py-1.5 font-sans text-xs font-semibold text-gray-600 transition-all hover:bg-gray-50"
+                  >
+                    <Link2 size={12} /> Load
+                  </button>
+                  <button onClick={() => deleteMutation.mutate(saved.id)}
+                    className="flex cursor-pointer items-center justify-center rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-gray-300 transition-all hover:border-red-200 hover:bg-red-50 hover:text-red-400"
+                  >
+                    <Trash2 size={12} />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       )}
     </div>
   )

@@ -8,7 +8,6 @@ import { z } from 'zod'
 import connectToDatabase from '../../lib/db'
 import User from '../../models/User'
 import bcrypt from 'bcryptjs'
-import { createSession } from '../../lib/session'
 
 const loginSchema_server = z.object({
   email: z.string().email(),
@@ -25,6 +24,9 @@ const loginFn = createServerFn({ method: 'POST' })
 
     const valid = await bcrypt.compare(data.password, user.password)
     if (!valid) throw new Error('Invalid email or password')
+
+    const { createSession } = await import('../../lib/session')
+
 
     await createSession(String(user._id))
 

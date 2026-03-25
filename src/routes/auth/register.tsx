@@ -8,7 +8,6 @@ import connectToDatabase from '../../lib/db'
 import User from '../../models/User'
 import bcrypt from 'bcryptjs'
 import { z } from 'zod'
-import { createSession } from '../../lib/session'
 
 const registerSchema_server = z.object({
   email: z.string().email(),
@@ -27,6 +26,9 @@ const registerFn = createServerFn({ method: 'POST' })
 
     const hashedPassword = await bcrypt.hash(data.password, 10)
     const newUser = await User.create({ email: data.email, password: hashedPassword })
+
+    const { createSession } = await import('../../lib/session')
+
 
     await createSession(String(newUser._id))
 

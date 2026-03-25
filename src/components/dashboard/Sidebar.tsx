@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { useRouter } from '@tanstack/react-router'
 import { createServerFn } from '@tanstack/react-start'
-import { clearSession } from '../../lib/session'
 import {
   ChevronDown,
   ChevronUp,
@@ -26,7 +25,8 @@ import {
 } from 'lucide-react'
 
 const logoutFn = createServerFn({ method: 'POST' }).handler(async () => {
-  clearSession()
+  const { clearSession } = await import('../../lib/session')
+  await clearSession()
 })
 
 type NavItem = {

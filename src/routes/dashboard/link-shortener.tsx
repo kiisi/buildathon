@@ -9,7 +9,6 @@ import {
   ToggleLeft, ToggleRight, ArrowUpDown, Plus, Zap, Globe, TrendingUp,
 } from 'lucide-react'
 import connectToDatabase from '../../lib/db'
-import { getSession } from '../../lib/session'
 import ShortLink from '../../models/ShortLink'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -26,6 +25,8 @@ type ShortenedLink = {
 // ── Server functions ──────────────────────────────────────────────────────────
 
 const getLinksFn = createServerFn().handler(async () => {
+  const { getSession } = await import('../../lib/session')
+
   const session = await getSession()
   if (!session) throw new Error('Unauthorized')
   await connectToDatabase()
@@ -43,6 +44,8 @@ const getLinksFn = createServerFn().handler(async () => {
 const createShortLinkFn = createServerFn({ method: 'POST' })
   .inputValidator(z.object({ originalUrl: z.string().url(), shortCode: z.string().min(3).max(50) }))
   .handler(async ({ data }) => {
+    const { getSession } = await import('../../lib/session')
+
     const session = await getSession()
     if (!session) throw new Error('Unauthorized')
     await connectToDatabase()
@@ -70,6 +73,8 @@ const createShortLinkFn = createServerFn({ method: 'POST' })
 const toggleLinkFn = createServerFn({ method: 'POST' })
   .inputValidator(z.object({ id: z.string(), enabled: z.boolean() }))
   .handler(async ({ data }) => {
+    const { getSession } = await import('../../lib/session')
+
     const session = await getSession()
     if (!session) throw new Error('Unauthorized')
     await connectToDatabase()
@@ -80,6 +85,8 @@ const toggleLinkFn = createServerFn({ method: 'POST' })
 const deleteLinkFn = createServerFn({ method: 'POST' })
   .inputValidator(z.object({ id: z.string() }))
   .handler(async ({ data }) => {
+    const { getSession } = await import('../../lib/session')
+
     const session = await getSession()
     if (!session) throw new Error('Unauthorized')
     await connectToDatabase()

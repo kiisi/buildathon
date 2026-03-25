@@ -5,7 +5,6 @@ import { z } from 'zod'
 import LinkCard from '../../components/dashboard/LinkCard'
 import LivePreview from '../../components/dashboard/LivePreview'
 import connectToDatabase from '../../lib/db'
-import { getSession } from '../../lib/session'
 import LinkModel from '../../models/Link'
 import {
   Sparkles, Settings, Plus, FolderOpen,
@@ -27,6 +26,8 @@ export type LinkItem = {
 // ── Server Functions ─────────────────────────────────────────────────────────
 
 const getLinksFn = createServerFn().handler(async () => {
+  const { getSession } = await import('../../lib/session')
+
   const session = await getSession()
   if (!session) throw new Error('Unauthorized')
   await connectToDatabase()
@@ -42,6 +43,8 @@ const getLinksFn = createServerFn().handler(async () => {
 })
 
 const addLinkFn = createServerFn({ method: 'POST' }).handler(async () => {
+  const { getSession } = await import('../../lib/session')
+
   const session = await getSession()
   if (!session) throw new Error('Unauthorized')
   await connectToDatabase()
@@ -74,6 +77,8 @@ const updateLinkFn = createServerFn({ method: 'POST' })
     }),
   )
   .handler(async ({ data }) => {
+    const { getSession } = await import('../../lib/session')
+
     const session = await getSession()
     if (!session) throw new Error('Unauthorized')
     await connectToDatabase()
@@ -87,6 +92,8 @@ const updateLinkFn = createServerFn({ method: 'POST' })
 const deleteLinkFn = createServerFn({ method: 'POST' })
   .inputValidator(z.object({ id: z.string() }))
   .handler(async ({ data }) => {
+    const { getSession } = await import('../../lib/session')
+
     const session = await getSession()
     if (!session) throw new Error('Unauthorized')
     await connectToDatabase()
