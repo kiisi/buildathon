@@ -22,8 +22,8 @@ type PaymentRecord = {
   status: 'success' | 'failed' | 'pending'; period: string; createdAt: string
 }
 type AccountData = {
-  email: string; username: string; plan: 'free' | 'pro'
-  planRenewsAt: string | null; allowDataSharing: boolean; payments: PaymentRecord[]
+  email: string; username: string; firstName: string; lastName: string
+  plan: 'free' | 'pro'; planRenewsAt: string | null; allowDataSharing: boolean; payments: PaymentRecord[]
 }
 
 // ── Server functions ──────────────────────────────────────────────────────────
@@ -34,13 +34,15 @@ const getAccountDataFn = createServerFn().handler(async () => {
   if (!session) throw new Error('Unauthorized')
   await connectToDatabase()
   const user = await UserModel.findById(session.userId)
-    .select('email username plan planRenewsAt allowDataSharing').lean() as any
+    .select('email username firstName lastName plan planRenewsAt allowDataSharing').lean() as any
   if (!user) throw new Error('User not found')
   const payments = await PaymentHistoryModel
     .find({ userId: session.userId }).sort({ createdAt: -1 }).limit(20).lean()
   return {
     email: user.email as string,
     username: (user.username ?? '') as string,
+    firstName: (user.firstName ?? '') as string,
+    lastName: (user.lastName ?? '') as string,
     plan: (user.plan ?? 'free') as 'free' | 'pro',
     planRenewsAt: user.planRenewsAt
       ? new Date(user.planRenewsAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
@@ -65,6 +67,17 @@ const updateUsernameFn = createServerFn({ method: 'POST' })
     const taken = await UserModel.findOne({ username: data.username, _id: { $ne: session.userId } }).lean()
     if (taken) throw new Error('Username is already taken')
     await UserModel.updateOne({ _id: session.userId }, { $set: { username: data.username } })
+    return { ok: true }
+  })
+
+const updateProfileFn = createServerFn({ method: 'POST' })
+  .inputValidator(z.object({ firstName: z.string().min(1), lastName: z.string().min(1) }))
+  .handler(async ({ data }) => {
+    const { getSession } = await import('../../lib/session')
+    const session = await getSession()
+    if (!session) throw new Error('Unauthorized')
+    await connectToDatabase()
+    await UserModel.updateOne({ _id: session.userId }, { $set: { firstName: data.firstName, lastName: data.lastName } })
     return { ok: true }
   })
 
@@ -135,7 +148,10 @@ function AccountPage() {
   const router = useRouter()
   const [account, setAccount] = useState<AccountData>(data)
   const [username, setUsername] = useState(data.username)
+  const [firstName, setFirstName] = useState(data.firstName)
+  const [lastName, setLastName] = useState(data.lastName)
   const [usernameError, setUsernameError] = useState('')
+  const [profileError, setProfileError] = useState('')
   const [loadingPayment, setLoadingPayment] = useState(false)
   const [showCancelConfirm, setShowCancelConfirm] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
@@ -144,6 +160,8 @@ function AccountPage() {
   const isPro = account.plan === 'pro'
   const usernameChanged = username !== account.username
   const usernameValid = /^[a-zA-Z0-9._]{3,30}$/.test(username)
+  const profileChanged = firstName !== account.firstName || lastName !== account.lastName
+  const profileValid = firstName.trim().length > 0 && lastName.trim().length > 0
 
   async function refresh() {
     const fresh = await getAccountDataFn()
@@ -157,6 +175,12 @@ function AccountPage() {
     mutationFn: () => updateUsernameFn({ data: { username } }),
     onSuccess: () => { setAccount(a => ({ ...a, username })); setUsernameError('') },
     onError: (err: any) => setUsernameError(err?.message || 'Failed to update username'),
+  })
+
+  const profileMutation = useMutation({
+    mutationFn: () => updateProfileFn({ data: { firstName: firstName.trim(), lastName: lastName.trim() } }),
+    onSuccess: () => { setAccount(a => ({ ...a, firstName: firstName.trim(), lastName: lastName.trim() })); setProfileError('') },
+    onError: (err: any) => setProfileError(err?.message || 'Failed to update name'),
   })
 
   const verifyMutation = useMutation({
@@ -209,11 +233,39 @@ function AccountPage() {
 
         <div className="flex flex-col gap-8">
 
-          {/* ── My information ── */}
           <section>
             <h2 className="mb-3 text-sm font-bold uppercase tracking-wider text-gray-400">My information</h2>
             <div className="rounded-2xl border border-gray-200 bg-white p-5">
               <div className="flex flex-col gap-3">
+                {/* First + Last name */}
+                <div className="flex gap-3">
+                  <div className="flex-1">
+                    <div className="flex flex-col rounded-xl bg-[#F5F6F8] px-4 py-2.5 focus-within:bg-white focus-within:ring-2 focus-within:ring-[#1069f9]/20">
+                      <label className="mb-0.5 text-[11px] font-semibold uppercase tracking-wider text-gray-400">First name</label>
+                      <input
+                        type="text"
+                        value={firstName}
+                        onChange={e => { setFirstName(e.target.value); setProfileError('') }}
+                        className="bg-transparent text-[15px] font-medium text-gray-900 outline-none placeholder:text-gray-400"
+                        placeholder="First name"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex flex-col rounded-xl bg-[#F5F6F8] px-4 py-2.5 focus-within:bg-white focus-within:ring-2 focus-within:ring-[#1069f9]/20">
+                      <label className="mb-0.5 text-[11px] font-semibold uppercase tracking-wider text-gray-400">Last name</label>
+                      <input
+                        type="text"
+                        value={lastName}
+                        onChange={e => { setLastName(e.target.value); setProfileError('') }}
+                        className="bg-transparent text-[15px] font-medium text-gray-900 outline-none placeholder:text-gray-400"
+                        placeholder="Last name"
+                      />
+                    </div>
+                  </div>
+                </div>
+                {profileError && <p className="text-xs text-red-500">{profileError}</p>}
+
                 {/* Username — editable */}
                 <div>
                   <div className={`flex flex-col rounded-xl px-4 py-2.5 transition-colors ${
@@ -244,15 +296,20 @@ function AccountPage() {
               </div>
 
               <button
-                onClick={() => usernameMutation.mutate()}
-                disabled={!usernameChanged || !usernameValid || usernameMutation.isPending}
+                onClick={() => {
+                  if (profileChanged && profileValid) profileMutation.mutate()
+                  if (usernameChanged && usernameValid) usernameMutation.mutate()
+                }}
+                disabled={(!profileChanged && !usernameChanged) || (!profileValid && !usernameValid) || profileMutation.isPending || usernameMutation.isPending}
                 className={`mt-4 flex h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-full text-sm font-bold transition-all ${
-                  !usernameChanged || !usernameValid
+                  (!profileChanged && !usernameChanged) || (!profileValid && !usernameValid)
                     ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                     : 'bg-gray-900 text-white hover:bg-gray-700 active:scale-[0.98]'
                 }`}
               >
-                {usernameMutation.isPending ? <><Loader2 size={14} className="animate-spin" /> Saving…</> : 'Save changes'}
+                {profileMutation.isPending || usernameMutation.isPending
+                  ? <><Loader2 size={14} className="animate-spin" /> Saving…</>
+                  : 'Save changes'}
               </button>
             </div>
           </section>
@@ -294,7 +351,7 @@ function AccountPage() {
 
                   <div className="flex flex-col gap-2.5 sm:flex-row">
                     {/* "Manage subscription" instead of "Renew now" when active */}
-                    <button
+                    {/* <button
                       onClick={handleUpgrade}
                       disabled={loadingPayment || verifyMutation.isPending}
                       className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-full border border-violet-200 bg-violet-50 py-2.5 text-sm font-semibold text-violet-700 transition-all hover:bg-violet-100 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
@@ -302,10 +359,10 @@ function AccountPage() {
                       {loadingPayment || verifyMutation.isPending
                         ? <><Loader2 size={14} className="animate-spin" /> Processing…</>
                         : <><RotateCcw size={14} /> Pay next cycle early</>}
-                    </button>
+                    </button> */}
                     <button
                       onClick={() => setShowCancelConfirm(true)}
-                      className="flex cursor-pointer items-center justify-center gap-2 rounded-full border border-gray-200 px-5 py-2.5 text-sm font-semibold text-gray-500 transition-all hover:border-red-200 hover:bg-red-50 hover:text-red-500"
+                      className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-full border border-gray-200 px-5 py-2.5 text-sm font-semibold text-gray-500 transition-all hover:border-red-200 hover:bg-red-50 hover:text-red-500"
                     >
                       <XCircle size={14} /> Cancel plan
                     </button>

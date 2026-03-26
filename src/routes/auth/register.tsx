@@ -10,6 +10,8 @@ import bcrypt from 'bcryptjs'
 import { z } from 'zod'
 
 const registerSchema_server = z.object({
+  firstName: z.string().min(1),
+  lastName: z.string().min(1),
   email: z.string().email(),
   password: z.string().min(6),
 })
@@ -20,16 +22,17 @@ const registerFn = createServerFn({ method: 'POST' })
     await connectToDatabase()
 
     const existing = await User.findOne({ email: data.email })
-    if (existing) {
-      throw new Error('User already exists')
-    }
+    if (existing) throw new Error('User already exists')
 
     const hashedPassword = await bcrypt.hash(data.password, 10)
-    const newUser = await User.create({ email: data.email, password: hashedPassword })
+    const newUser = await User.create({
+      email: data.email,
+      password: hashedPassword,
+      firstName: data.firstName,
+      lastName: data.lastName,
+    })
 
     const { createSession } = await import('../../lib/session')
-
-
     await createSession(String(newUser._id))
 
     return { userId: String(newUser._id) }
@@ -40,6 +43,8 @@ export const Route = createFileRoute('/auth/register')({
 })
 
 const registerSchema = Yup.object({
+  firstName: Yup.string().min(1, 'First name is required').required('First name is required'),
+  lastName: Yup.string().min(1, 'Last name is required').required('Last name is required'),
   email: Yup.string()
     .email('Please enter a valid email address')
     .required('Email is required'),
@@ -52,22 +57,16 @@ function RegisterPage() {
   const navigate = useNavigate()
 
   const mutation = useMutation({
-    mutationFn: (values: { email: string; password: string }) =>
+    mutationFn: (values: { firstName: string; lastName: string; email: string; password: string }) =>
       registerFn({ data: values }),
-    onSuccess: () => {
-      navigate({ to: '/auth/username' })
-    },
-    onError: (error: any) => {
-      alert(error?.message || 'Registration failed')
-    },
+    onSuccess: () => navigate({ to: '/auth/username' }),
+    onError: (error: any) => alert(error?.message || 'Registration failed'),
   })
 
   const formik = useFormik({
-    initialValues: { email: '', password: '' },
+    initialValues: { firstName: '', lastName: '', email: '', password: '' },
     validationSchema: registerSchema,
-    onSubmit: (values) => {
-      mutation.mutate(values)
-    },
+    onSubmit: (values) => mutation.mutate(values),
   })
 
   const isDisabled = !formik.dirty || !formik.isValid
@@ -93,6 +92,51 @@ function RegisterPage() {
 
           {/* Form */}
           <form onSubmit={formik.handleSubmit} className="mb-5 flex flex-col gap-4" noValidate>
+            {/* First + Last name row */}
+            <div className="flex gap-3">
+              <div className="flex-1">
+                <input
+                  id="register-firstName"
+                  name="firstName"
+                  type="text"
+                  className={`h-[52px] w-full rounded-[10px] border-[1.5px] bg-white px-4 font-sans text-[0.95rem] text-gray-900 outline-none transition-colors placeholder:text-gray-400 ${
+                    formik.touched.firstName && formik.errors.firstName
+                      ? 'border-red-400 focus:border-red-500'
+                      : 'border-gray-200 focus:border-gray-900'
+                  }`}
+                  placeholder="First name"
+                  value={formik.values.firstName}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  autoComplete="given-name"
+                  autoFocus
+                />
+                {formik.touched.firstName && formik.errors.firstName && (
+                  <p className="mt-1.5 text-xs text-red-500">{formik.errors.firstName}</p>
+                )}
+              </div>
+              <div className="flex-1">
+                <input
+                  id="register-lastName"
+                  name="lastName"
+                  type="text"
+                  className={`h-[52px] w-full rounded-[10px] border-[1.5px] bg-white px-4 font-sans text-[0.95rem] text-gray-900 outline-none transition-colors placeholder:text-gray-400 ${
+                    formik.touched.lastName && formik.errors.lastName
+                      ? 'border-red-400 focus:border-red-500'
+                      : 'border-gray-200 focus:border-gray-900'
+                  }`}
+                  placeholder="Last name"
+                  value={formik.values.lastName}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  autoComplete="family-name"
+                />
+                {formik.touched.lastName && formik.errors.lastName && (
+                  <p className="mt-1.5 text-xs text-red-500">{formik.errors.lastName}</p>
+                )}
+              </div>
+            </div>
+
             <div className="w-full">
               <input
                 id="register-email"

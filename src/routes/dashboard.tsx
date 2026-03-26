@@ -1,21 +1,38 @@
 import { createFileRoute, Outlet, useNavigate, useMatches, redirect } from '@tanstack/react-router'
 import { createServerFn } from '@tanstack/react-start'
+import { getCookie } from '@tanstack/react-start/server'
+import { jwtVerify } from 'jose'
 import Sidebar from '../components/dashboard/Sidebar'
 import connectToDatabase from '../lib/db'
 import UserModel from '../models/User'
 import { TreePine, Sparkles, Link2, BarChart, User } from 'lucide-react'
 
+const COOKIE_NAME = 'lg_session'
+const secret = new TextEncoder().encode(
+  process.env.SESSION_SECRET || 'super-secret-change-me-in-production-32chars',
+)
+
+async function readSession() {
+  const token = getCookie(COOKIE_NAME)
+  if (!token) return null
+  try {
+    const { payload } = await jwtVerify(token, secret)
+    return { userId: payload.userId as string }
+  } catch {
+    return null
+  }
+}
+
 const checkSessionFn = createServerFn().handler(async () => {
-  const { getSession } = await import('../lib/session')
-  return await getSession()
+  return await readSession()
 })
 
 const getUserProfileFn = createServerFn().handler(async () => {
-  const { getSession } = await import('../lib/session')
-  const session = await getSession()
+  const session = await readSession()
   if (!session) throw new Error('Unauthorized')
   await connectToDatabase()
-  const user = await UserModel.findById(session.userId).select('email username plan').lean() as any
+  const user = await UserModel.findById(session.userId)
+    .select('email username plan').lean() as any
   if (!user) throw new Error('User not found')
   return {
     email: user.email as string,

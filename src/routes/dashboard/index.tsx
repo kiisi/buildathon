@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, getRouteApi } from '@tanstack/react-router'
 import { createServerFn } from '@tanstack/react-start'
 import { z } from 'zod'
 import LinkCard from '../../components/dashboard/LinkCard'
@@ -11,6 +11,8 @@ import {
   Archive, ChevronRight, User, Globe,
   Instagram, Youtube, Twitch, Link2, TreePine,
 } from 'lucide-react'
+
+const dashboardRoute = getRouteApi('/dashboard')
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -115,6 +117,7 @@ export const Route = createFileRoute('/dashboard/')({
 
 function DashboardLinksPage() {
   const { links: initialLinks } = Route.useLoaderData()
+  const { username } = dashboardRoute.useLoaderData()
   const [links, setLinks] = useState<LinkItem[]>(initialLinks)
   const [saving, setSaving] = useState<Record<string, boolean>>({})
 
@@ -259,7 +262,7 @@ function DashboardLinksPage() {
 
       {/* ── Right: Live Preview ── */}
       <div className="hidden overflow-y-auto border-l border-gray-100 bg-white p-6 pb-12 xl:block">
-        <LivePreview username="devkiisi" displayName="Kiisi" links={links} />
+        <LivePreview username={username || 'yourname'} displayName="" slug={username} links={links} />
       </div>
     </>
   )
