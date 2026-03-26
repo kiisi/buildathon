@@ -32,7 +32,7 @@ const plans = [
   {
     name: 'Pro', price: '₦2,000', period: 'per month',
     desc: 'For creators who want to grow faster.',
-    cta: 'Try free for 7 days', href: '/auth/register', highlight: true,
+    cta: 'Subscribe now', href: '/auth/register', highlight: true,
     perks: ['Everything in Free', 'Remove Linkgrove logo', 'Customized layouts', 'Comprehensive analytics', 'Social media scheduling', 'Automated Instagram DMs', 'Email integrations', 'Lower seller fees'],
   },
 ]
@@ -285,8 +285,8 @@ function Pricing() {
               key={plan.name}
               className={`relative flex flex-col rounded-2xl p-7 ${
                 plan.highlight
-                  ? 'border-2 border-[#1069f9] bg-white shadow-xl shadow-[#1069f9]/10'
-                  : 'border border-gray-200 bg-white shadow-sm'
+                  ? 'border-2 border-[#1069f9] bg-white'
+                  : 'border border-gray-200 bg-white'
               }`}
             >
               {plan.highlight && (

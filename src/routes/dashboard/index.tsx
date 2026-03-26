@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { createFileRoute, getRouteApi } from '@tanstack/react-router'
+import { createFileRoute, getRouteApi, useNavigate } from '@tanstack/react-router'
 import { createServerFn } from '@tanstack/react-start'
 import { z } from 'zod'
 import LinkCard from '../../components/dashboard/LinkCard'
@@ -9,7 +9,7 @@ import LinkModel from '../../models/Link'
 import {
   Sparkles, Settings, Plus, FolderOpen,
   Archive, ChevronRight, User, Globe,
-  Instagram, Youtube, Twitch, Link2, TreePine,
+  Instagram, Youtube, Twitch, Link2, TreePine, Lock, Crown,
 } from 'lucide-react'
 
 const dashboardRoute = getRouteApi('/dashboard')
@@ -117,9 +117,14 @@ export const Route = createFileRoute('/dashboard/')({
 
 function DashboardLinksPage() {
   const { links: initialLinks } = Route.useLoaderData()
-  const { username } = dashboardRoute.useLoaderData()
+  const { username, firstName, lastName, plan } = dashboardRoute.useLoaderData()
+  const navigate = useNavigate()
+  const displayName = `${firstName} ${lastName}`.trim() || username
   const [links, setLinks] = useState<LinkItem[]>(initialLinks)
   const [saving, setSaving] = useState<Record<string, boolean>>({})
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false)
+  const [showFooter, setShowFooter] = useState(true)
+  const isPro = plan === 'pro'
 
   // ── Handlers ──────────────────────────────────────────────────────────────
 
@@ -129,6 +134,11 @@ function DashboardLinksPage() {
   }
 
   async function handleUpdate(id: string, updates: Partial<LinkItem>) {
+    // Gate: free users cannot disable links
+    if (!isPro && updates.enabled === false) {
+      setShowUpgradeModal(true)
+      return
+    }
     // Optimistic update
     setLinks((prev) => prev.map((l) => (l.id === id ? { ...l, ...updates } : l)))
     setSaving((s) => ({ ...s, [id]: true }))
@@ -173,8 +183,8 @@ function DashboardLinksPage() {
         {/* Profile header */}
         <div className="mb-6 flex items-center gap-4">
           <div className="flex-1">
-            <h2 className="text-base font-bold text-gray-900">devkiisi</h2>
-            <p className="text-sm text-gray-400">Kiisi</p>
+            <h2 className="text-base font-bold text-gray-900">{username}</h2>
+            <p className="text-sm text-gray-400">{displayName}</p>
             <div className="mt-2 flex items-center gap-2">
               {[Globe, Instagram, Youtube, Twitch].map((Icon, i) => (
                 <button
@@ -246,24 +256,73 @@ function DashboardLinksPage() {
         </div>
 
         {/* Linkgrove footer toggle */}
-        <div className="mt-4 flex items-center justify-between rounded-2xl border border-gray-200 bg-white p-4">
+        <div className={`mt-4 flex items-center justify-between rounded-2xl border bg-white p-4 ${!isPro ? 'border-gray-100' : 'border-gray-200'}`}>
           <div>
-            <span className="text-sm font-bold text-gray-900">Linkgrove footer</span>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-bold text-gray-900">Linkgrove footer</span>
+              {!isPro && (
+                <span className="flex items-center gap-1 rounded-full bg-violet-50 px-2 py-0.5 text-[10px] font-bold text-violet-600">
+                  <Crown size={9} /> Pro
+                </span>
+              )}
+            </div>
             <div className="mt-1.5 flex items-center gap-1.5">
               <TreePine size={14} className="text-[#1069f9]" />
               <span className="text-sm font-extrabold tracking-tight text-gray-900">Linkgrove</span>
             </div>
           </div>
-          <button className="relative h-6 w-11 cursor-pointer rounded-full border-none bg-[#22c55e] transition-colors">
-            <span className="absolute left-[22px] top-0.5 h-5 w-5 rounded-full bg-white" />
-          </button>
+          {isPro ? (
+            <button
+              onClick={() => setShowFooter(v => !v)}
+              className={`relative h-6 w-11 cursor-pointer rounded-full border-none transition-colors ${showFooter ? 'bg-[#22c55e]' : 'bg-gray-200'}`}
+            >
+              <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-all duration-200 ${showFooter ? 'left-[22px]' : 'left-0.5'}`} />
+            </button>
+          ) : (
+            <button
+              onClick={() => setShowUpgradeModal(true)}
+              className="flex items-center gap-1.5 rounded-full border border-violet-200 bg-violet-50 px-3 py-1.5 text-xs font-bold text-violet-600 transition-colors hover:bg-violet-100"
+            >
+              <Lock size={11} /> Upgrade to remove
+            </button>
+          )}
         </div>
       </div>
 
       {/* ── Right: Live Preview ── */}
       <div className="hidden overflow-y-auto border-l border-gray-100 bg-white p-6 pb-12 xl:block">
-        <LivePreview username={username || 'yourname'} displayName="" slug={username} links={links} />
+        <LivePreview username={username || 'yourname'} displayName={displayName} slug={username} showFooter={showFooter} links={links} />
       </div>
+
+      {/* ── Upgrade modal ── */}
+      {showUpgradeModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowUpgradeModal(false)} />
+          <div className="relative z-10 w-full max-w-sm rounded-2xl bg-white p-6">
+            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-violet-100">
+              <Crown size={22} className="text-violet-500" />
+            </div>
+            <h3 className="mb-1.5 text-base font-bold text-gray-900">Pro feature</h3>
+            <p className="mb-5 text-sm text-gray-500">
+              Disabling links and removing the Linkgrove footer are Pro features. Upgrade to take full control of your page.
+            </p>
+            <div className="flex gap-2.5">
+              <button
+                onClick={() => setShowUpgradeModal(false)}
+                className="flex-1 cursor-pointer rounded-full border border-gray-200 py-2.5 text-sm font-semibold text-gray-600 hover:bg-gray-50"
+              >
+                Not now
+              </button>
+              <button
+                onClick={() => { setShowUpgradeModal(false); navigate({ to: '/dashboard/account' }) }}
+                className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-full bg-gradient-to-r from-violet-500 to-purple-600 py-2.5 text-sm font-bold text-white hover:opacity-90"
+              >
+                <Crown size={14} /> Upgrade to Pro
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   )
 }

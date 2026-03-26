@@ -16,13 +16,14 @@ interface LivePreviewProps {
   username: string      // displayed name under avatar
   displayName: string   // bio line
   slug?: string         // URL slug (linkgrove.ee/slug) — falls back to username
+  showFooter?: boolean
   links?: { id: string; title: string; url: string; enabled: boolean }[]
   design?: Partial<DesignSettings>
 }
 
 const btnRadiusMap = { rect: '0px', soft: '10px', pill: '9999px' }
 
-export default function LivePreview({ username, displayName, slug, links = [], design = {} }: LivePreviewProps) {
+export default function LivePreview({ username, displayName, slug, showFooter = true, links = [], design = {} }: LivePreviewProps) {
   const activeLinks = links.filter(l => l.enabled && l.title)
   const urlSlug = slug || username
 
@@ -125,11 +126,13 @@ export default function LivePreview({ username, displayName, slug, links = [], d
         </div>
 
         {/* Footer */}
-        <div className="border-t border-gray-100/30 px-4 py-3 text-center">
-          <p className="text-[10px] opacity-40" style={{ color: fontColor }}>
-            linkgrove.ee
-          </p>
-        </div>
+        {showFooter && (
+          <div className="border-t border-gray-100/30 px-4 py-3 text-center">
+            <p className="text-[10px] opacity-40" style={{ color: fontColor }}>
+              linkgrove.ee
+            </p>
+          </div>
+        )}
       </div>
     </div>
   )

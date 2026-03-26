@@ -40,7 +40,7 @@ const getDesignFn = createServerFn().handler(async () => {
     btnStyle: (d?.btnStyle ?? 'solid') as 'solid' | 'outline' | 'shadow',
     btnColor: d?.btnColor ?? '#f1f5f9',
     btnFontColor: d?.btnFontColor ?? '#0f172a',
-    fontFamily: d?.fontFamily ?? 'Link Sans',
+    fontFamily: d?.fontFamily ?? 'Plus Jakarta Sans',
     fontColor: d?.fontColor ?? '#0f172a',
   } as FullDesign
 })
@@ -105,7 +105,28 @@ const buttonStyles = [
   { id: 'shadow' as const, label: 'Shadow' },
 ]
 
-const fonts = ['Link Sans', 'Inter', 'Outfit', 'Playfair Display', 'Space Grotesk']
+const fonts: { label: string; value: string; googleName?: string }[] = [
+  { label: 'Plus Jakarta Sans', value: 'Plus Jakarta Sans', googleName: 'Plus+Jakarta+Sans:wght@400;600;700;800' },
+  { label: 'Inter', value: 'Inter', googleName: 'Inter:wght@400;600;700;800' },
+  { label: 'Outfit', value: 'Outfit', googleName: 'Outfit:wght@400;600;700;800' },
+  { label: 'Playfair Display', value: 'Playfair Display', googleName: 'Playfair+Display:wght@400;600;700;800' },
+  { label: 'Space Grotesk', value: 'Space Grotesk', googleName: 'Space+Grotesk:wght@400;600;700' },
+  { label: 'DM Sans', value: 'DM Sans', googleName: 'DM+Sans:wght@400;600;700;800' },
+  { label: 'Nunito', value: 'Nunito', googleName: 'Nunito:wght@400;600;700;800' },
+  { label: 'Poppins', value: 'Poppins', googleName: 'Poppins:wght@400;600;700;800' },
+]
+
+// Track which fonts have already been injected
+const loadedFonts = new Set<string>()
+
+function loadGoogleFont(font: typeof fonts[0]) {
+  if (!font.googleName || loadedFonts.has(font.value)) return
+  loadedFonts.add(font.value)
+  const link = document.createElement('link')
+  link.rel = 'stylesheet'
+  link.href = `https://fonts.googleapis.com/css2?family=${font.googleName}&display=swap`
+  document.head.appendChild(link)
+}
 const bgColorPresets = ['#ffffff', '#f8fafc', '#f1f5f9', '#0f172a', '#fff1f2', '#eff6ff', '#f0fdf4', '#fefce8', '#1a1a1a']
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -114,6 +135,12 @@ export function DesignPage() {
   const initial = Route.useLoaderData()
   const { username } = dashboardRoute.useLoaderData()
   const [d, setD] = useState<FullDesign>(initial)
+
+  // Load the saved font on mount
+  useEffect(() => {
+    const font = fonts.find(f => f.value === initial.fontFamily)
+    if (font) loadGoogleFont(font)
+  }, [])
   const [activeTab, setActiveTab] = useState<'profile' | 'theme' | 'background' | 'buttons' | 'typography'>('profile')
   const [mobilePreviewOpen, setMobilePreviewOpen] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -500,11 +527,30 @@ export function DesignPage() {
                 <h3 className="mb-4 text-sm font-bold text-gray-900">Font</h3>
                 <select
                   value={d.fontFamily}
-                  onChange={e => set('fontFamily', e.target.value)}
+                  onChange={e => {
+                    const font = fonts.find(f => f.value === e.target.value)
+                    if (font) loadGoogleFont(font)
+                    set('fontFamily', e.target.value)
+                  }}
                   className="h-12 w-full appearance-none rounded-xl border border-gray-200 bg-white px-4 text-sm font-bold text-gray-900 outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-400/10 cursor-pointer"
+                  style={{ fontFamily: d.fontFamily }}
                 >
-                  {fonts.map(f => <option key={f} value={f}>{f}</option>)}
+                  {fonts.map(f => (
+                    <option key={f.value} value={f.value} style={{ fontFamily: f.value }}>
+                      {f.label}
+                    </option>
+                  ))}
                 </select>
+
+                {/* Live font preview */}
+                <div
+                  className="mt-4 rounded-xl border border-gray-100 bg-gray-50 px-5 py-4"
+                  style={{ fontFamily: d.fontFamily }}
+                >
+                  <p className="text-lg font-bold text-gray-900">The quick brown fox</p>
+                  <p className="text-sm text-gray-500">jumps over the lazy dog</p>
+                  <p className="mt-2 text-xs text-gray-400">Aa Bb Cc 123</p>
+                </div>
               </section>
 
               <section className="rounded-2xl border border-gray-100 bg-white p-6">

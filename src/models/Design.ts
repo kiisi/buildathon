@@ -12,7 +12,7 @@ const DesignSchema = new mongoose.Schema(
     btnStyle: { type: String, enum: ['solid', 'outline', 'shadow'], default: 'shadow' },
     btnColor: { type: String, default: '#ffffff' },
     btnFontColor: { type: String, default: '#0f172a' },
-    fontFamily: { type: String, default: 'Link Sans' },
+    fontFamily: { type: String, default: 'Plus Jakarta Sans' },
     fontColor: { type: String, default: '#0f172a' },
     profileImage: { type: String, default: '' },
   },

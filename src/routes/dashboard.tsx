@@ -32,12 +32,14 @@ const getUserProfileFn = createServerFn().handler(async () => {
   if (!session) throw new Error('Unauthorized')
   await connectToDatabase()
   const user = await UserModel.findById(session.userId)
-    .select('email username plan').lean() as any
+    .select('email username plan firstName lastName').lean() as any
   if (!user) throw new Error('User not found')
   return {
     email: user.email as string,
     username: (user.username ?? '') as string,
     plan: (user.plan ?? 'free') as 'free' | 'pro',
+    firstName: (user.firstName ?? '') as string,
+    lastName: (user.lastName ?? '') as string,
   }
 })
 
