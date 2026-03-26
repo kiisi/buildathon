@@ -11,9 +11,11 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as AboutRouteImport } from './routes/about'
+import { Route as UsernameRouteImport } from './routes/$username'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
 import { Route as SCodeRouteImport } from './routes/s/$code'
+import { Route as PollPollIdRouteImport } from './routes/poll/$pollId'
 import { Route as OnboardingSelectPlanRouteImport } from './routes/onboarding/select-plan'
 import { Route as OnboardingSelectCategoryRouteImport } from './routes/onboarding/select-category'
 import { Route as OnboardingProTrialRouteImport } from './routes/onboarding/pro-trial'
@@ -40,6 +42,11 @@ const AboutRoute = AboutRouteImport.update({
   path: '/about',
   getParentRoute: () => rootRouteImport,
 } as any)
+const UsernameRoute = UsernameRouteImport.update({
+  id: '/$username',
+  path: '/$username',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -53,6 +60,11 @@ const DashboardIndexRoute = DashboardIndexRouteImport.update({
 const SCodeRoute = SCodeRouteImport.update({
   id: '/s/$code',
   path: '/s/$code',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PollPollIdRoute = PollPollIdRouteImport.update({
+  id: '/poll/$pollId',
+  path: '/poll/$pollId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OnboardingSelectPlanRoute = OnboardingSelectPlanRouteImport.update({
@@ -135,6 +147,7 @@ const AnonUsernameRoute = AnonUsernameRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/$username': typeof UsernameRoute
   '/about': typeof AboutRoute
   '/dashboard': typeof DashboardRouteWithChildren
   '/anon/$username': typeof AnonUsernameRoute
@@ -152,11 +165,13 @@ export interface FileRoutesByFullPath {
   '/onboarding/pro-trial': typeof OnboardingProTrialRoute
   '/onboarding/select-category': typeof OnboardingSelectCategoryRoute
   '/onboarding/select-plan': typeof OnboardingSelectPlanRoute
+  '/poll/$pollId': typeof PollPollIdRoute
   '/s/$code': typeof SCodeRoute
   '/dashboard/': typeof DashboardIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/$username': typeof UsernameRoute
   '/about': typeof AboutRoute
   '/anon/$username': typeof AnonUsernameRoute
   '/auth/login': typeof AuthLoginRoute
@@ -173,12 +188,14 @@ export interface FileRoutesByTo {
   '/onboarding/pro-trial': typeof OnboardingProTrialRoute
   '/onboarding/select-category': typeof OnboardingSelectCategoryRoute
   '/onboarding/select-plan': typeof OnboardingSelectPlanRoute
+  '/poll/$pollId': typeof PollPollIdRoute
   '/s/$code': typeof SCodeRoute
   '/dashboard': typeof DashboardIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/$username': typeof UsernameRoute
   '/about': typeof AboutRoute
   '/dashboard': typeof DashboardRouteWithChildren
   '/anon/$username': typeof AnonUsernameRoute
@@ -196,6 +213,7 @@ export interface FileRoutesById {
   '/onboarding/pro-trial': typeof OnboardingProTrialRoute
   '/onboarding/select-category': typeof OnboardingSelectCategoryRoute
   '/onboarding/select-plan': typeof OnboardingSelectPlanRoute
+  '/poll/$pollId': typeof PollPollIdRoute
   '/s/$code': typeof SCodeRoute
   '/dashboard/': typeof DashboardIndexRoute
 }
@@ -203,6 +221,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/$username'
     | '/about'
     | '/dashboard'
     | '/anon/$username'
@@ -220,11 +239,13 @@ export interface FileRouteTypes {
     | '/onboarding/pro-trial'
     | '/onboarding/select-category'
     | '/onboarding/select-plan'
+    | '/poll/$pollId'
     | '/s/$code'
     | '/dashboard/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/$username'
     | '/about'
     | '/anon/$username'
     | '/auth/login'
@@ -241,11 +262,13 @@ export interface FileRouteTypes {
     | '/onboarding/pro-trial'
     | '/onboarding/select-category'
     | '/onboarding/select-plan'
+    | '/poll/$pollId'
     | '/s/$code'
     | '/dashboard'
   id:
     | '__root__'
     | '/'
+    | '/$username'
     | '/about'
     | '/dashboard'
     | '/anon/$username'
@@ -263,12 +286,14 @@ export interface FileRouteTypes {
     | '/onboarding/pro-trial'
     | '/onboarding/select-category'
     | '/onboarding/select-plan'
+    | '/poll/$pollId'
     | '/s/$code'
     | '/dashboard/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  UsernameRoute: typeof UsernameRoute
   AboutRoute: typeof AboutRoute
   DashboardRoute: typeof DashboardRouteWithChildren
   AnonUsernameRoute: typeof AnonUsernameRoute
@@ -279,6 +304,7 @@ export interface RootRouteChildren {
   OnboardingProTrialRoute: typeof OnboardingProTrialRoute
   OnboardingSelectCategoryRoute: typeof OnboardingSelectCategoryRoute
   OnboardingSelectPlanRoute: typeof OnboardingSelectPlanRoute
+  PollPollIdRoute: typeof PollPollIdRoute
   SCodeRoute: typeof SCodeRoute
 }
 
@@ -296,6 +322,13 @@ declare module '@tanstack/react-router' {
       path: '/about'
       fullPath: '/about'
       preLoaderRoute: typeof AboutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/$username': {
+      id: '/$username'
+      path: '/$username'
+      fullPath: '/$username'
+      preLoaderRoute: typeof UsernameRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -317,6 +350,13 @@ declare module '@tanstack/react-router' {
       path: '/s/$code'
       fullPath: '/s/$code'
       preLoaderRoute: typeof SCodeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/poll/$pollId': {
+      id: '/poll/$pollId'
+      path: '/poll/$pollId'
+      fullPath: '/poll/$pollId'
+      preLoaderRoute: typeof PollPollIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/onboarding/select-plan': {
@@ -455,6 +495,7 @@ const DashboardRouteWithChildren = DashboardRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  UsernameRoute: UsernameRoute,
   AboutRoute: AboutRoute,
   DashboardRoute: DashboardRouteWithChildren,
   AnonUsernameRoute: AnonUsernameRoute,
@@ -465,6 +506,7 @@ const rootRouteChildren: RootRouteChildren = {
   OnboardingProTrialRoute: OnboardingProTrialRoute,
   OnboardingSelectCategoryRoute: OnboardingSelectCategoryRoute,
   OnboardingSelectPlanRoute: OnboardingSelectPlanRoute,
+  PollPollIdRoute: PollPollIdRoute,
   SCodeRoute: SCodeRoute,
 }
 export const routeTree = rootRouteImport
