@@ -137,8 +137,8 @@ function LoginPage() {
           {/* Forgot links */}
           <div className="mb-6 flex gap-3 text-[0.85rem]">
             <a href="#" className="text-gray-500 hover:underline">Forgot password?</a>
-            <span className="text-gray-300">•</span>
-            <a href="#" className="text-gray-500 hover:underline">Forgot username?</a>
+            {/* <span className="text-gray-300">•</span>
+            <a href="#" className="text-gray-500 hover:underline">Forgot username?</a> */}
           </div>
 
           {/* Divider */}
@@ -161,7 +161,6 @@ function LoginPage() {
 
           {/* Footer */}
           <div className="mt-auto flex flex-col items-center gap-2.5 pt-6">
-            <span className="cursor-pointer self-start text-xs text-gray-400 hover:underline">Cookie preferences</span>
             <p className="m-0 text-sm text-gray-500">
               Don't have an account?{' '}
               <a href="/auth/register" className="font-bold text-gray-900 underline hover:text-[#1069f9]">Sign up</a>

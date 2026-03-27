@@ -10,6 +10,7 @@ import {
 import connectToDatabase from '../../lib/db'
 import UserModel from '../../models/User'
 import PaymentHistoryModel from '../../models/PaymentHistory'
+import { APP_URL } from '../../lib/constants'
 
 declare global {
   interface Window { webpayCheckout: (config: Record<string, unknown>) => void }
@@ -215,7 +216,7 @@ function AccountPage() {
     window.webpayCheckout({
       merchant_code: 'MX276092', pay_item_id: 'Default_Payable_MX276092',
       txn_ref: txnRef, amount: 200000, currency: 566,
-      site_redirect_url: `${window.location.origin}/dashboard/account`,
+      site_redirect_url: `${APP_URL}/dashboard/account`,
       cust_id: account.username, cust_name: account.username, cust_email: account.email,
       mode: 'TEST',
       onComplete: (response: { resp: string; txnref: string }) => {

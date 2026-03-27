@@ -10,6 +10,7 @@ import {
 } from 'lucide-react'
 import connectToDatabase from '../../lib/db'
 import ShortLink from '../../models/ShortLink'
+import { APP_URL } from '../../lib/constants'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -116,7 +117,7 @@ function LinkShortenerPage() {
   const [justCreatedId, setJustCreatedId] = useState<string | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
-  const domain = 'lnk.grove'
+  const domain = APP_URL.replace('https://', '')
 
   const totalClicks = links.reduce((s, l) => s + l.clicks, 0)
   const topLink = links.length ? links.reduce((a, b) => (a.clicks > b.clicks ? a : b)) : null
@@ -169,7 +170,7 @@ function LinkShortenerPage() {
   }
 
   function handleCopy(link: ShortenedLink) {
-    navigator.clipboard.writeText(`https://${domain}/${link.shortCode}`)
+    navigator.clipboard.writeText(`${APP_URL}/s/${link.shortCode}`)
     setCopiedId(link.id)
     setTimeout(() => setCopiedId(null), 2000)
   }
@@ -298,7 +299,7 @@ function LinkShortenerPage() {
       {filtered.length > 0 ? (
         <div className="flex flex-col gap-2.5">
           {filtered.map((link) => {
-            const shortUrl = `${domain}/${link.shortCode}`
+            const shortUrl = `${domain}/s/${link.shortCode}`
             const isCopied = copiedId === link.id
             const isNew = justCreatedId === link.id
             return (

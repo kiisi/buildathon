@@ -1,4 +1,5 @@
 import { Share2, Settings, User } from 'lucide-react'
+import { APP_URL } from '../../lib/constants'
 
 export interface DesignSettings {
   profileLayout: 'classic' | 'hero'
@@ -60,7 +61,7 @@ export default function LivePreview({ username, displayName, slug, showFooter = 
       {/* URL bar */}
       <div className="mb-4 flex items-center gap-2">
         <div className="flex flex-1 items-center justify-center rounded-full bg-gray-100 px-4 py-2">
-          <span className="text-xs font-medium text-gray-600">linkgrove.ee/{urlSlug}</span>
+          <span className="text-xs font-medium text-gray-600">{APP_URL.replace('https://', '')}/{urlSlug}</span>
         </div>
         <button className="cursor-pointer rounded-full border-none bg-transparent p-1.5 text-gray-400 hover:text-gray-600">
           <Share2 size={16} />
@@ -129,7 +130,7 @@ export default function LivePreview({ username, displayName, slug, showFooter = 
         {showFooter && (
           <div className="border-t border-gray-100/30 px-4 py-3 text-center">
             <p className="text-[10px] opacity-40" style={{ color: fontColor }}>
-              linkgrove.ee
+              linkgroove.vercel.app
             </p>
           </div>
         )}

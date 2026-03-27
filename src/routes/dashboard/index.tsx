@@ -170,10 +170,10 @@ function DashboardLinksPage() {
         <div className="mb-6 flex items-center justify-between">
           <h1 className="text-2xl font-extrabold tracking-tight text-gray-900">Links</h1>
           <div className="flex items-center gap-2">
-            <button className="flex cursor-pointer items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-2 font-sans text-sm font-semibold text-gray-700 transition-all hover:border-gray-300">
+            {/* <button className="flex cursor-pointer items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-2 font-sans text-sm font-semibold text-gray-700 transition-all hover:border-gray-300">
               <Sparkles size={16} className="text-gray-500" />
               Enhance
-            </button>
+            </button> */}
             <button className="flex cursor-pointer items-center justify-center rounded-full border border-gray-200 bg-white p-2.5 text-gray-500 transition-all hover:border-gray-300">
               <Settings size={16} />
             </button>
@@ -185,7 +185,7 @@ function DashboardLinksPage() {
           <div className="flex-1">
             <h2 className="text-base font-bold text-gray-900">{username}</h2>
             <p className="text-sm text-gray-400">{displayName}</p>
-            <div className="mt-2 flex items-center gap-2">
+            {/* <div className="mt-2 flex items-center gap-2">
               {[Globe, Instagram, Youtube, Twitch].map((Icon, i) => (
                 <button
                   key={i}
@@ -197,11 +197,11 @@ function DashboardLinksPage() {
               <button className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-md border-none bg-gray-100 text-gray-400 hover:bg-gray-200">
                 <Plus size={14} />
               </button>
-            </div>
+            </div> */}
           </div>
-          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gray-100">
+          {/* <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gray-100">
             <User size={24} className="text-gray-400" />
-          </div>
+          </div> */}
         </div>
 
         {/* Add button */}

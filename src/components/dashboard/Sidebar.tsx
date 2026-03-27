@@ -95,7 +95,7 @@ export default function Sidebar({
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray-200 text-sm">👤</div>
                   <div>
                     <p className="text-[15px] font-bold text-gray-900">{username || 'Account'}</p>
-                    <p className="text-[12px] text-gray-400">linkgrove.ee/{username}</p>
+                    <p className="text-[12px] text-gray-400">linkgroove.vercel.app/{username}</p>
                   </div>
                 </div>
                 {isPro ? (

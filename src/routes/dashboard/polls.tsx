@@ -10,6 +10,7 @@ import {
 } from 'lucide-react'
 import connectToDatabase from '../../lib/db'
 import PollModel from '../../models/Poll'
+import { APP_URL } from '../../lib/constants'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -176,7 +177,7 @@ function PollsPage() {
   }
 
   function handleCopyLink(pollId: string) {
-    navigator.clipboard.writeText(`${window.location.origin}/poll/${pollId}`)
+    navigator.clipboard.writeText(`${APP_URL}/poll/${pollId}`)
     setCopiedId(pollId)
     setTimeout(() => setCopiedId(null), 2000)
   }

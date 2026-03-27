@@ -195,7 +195,7 @@ function RegisterPage() {
           </form>
 
           {/* Terms */}
-          <p className="mb-6 text-[0.8rem] leading-relaxed text-gray-500">
+          {/* <p className="mb-6 text-[0.8rem] leading-relaxed text-gray-500">
             By clicking <span className="font-bold text-gray-900">Create account</span>, you agree
             to LinkGrove's{' '}
             <a href="#" className="underline">
@@ -206,7 +206,7 @@ function RegisterPage() {
               T&Cs
             </a>{' '}
             and to receive offers, news and updates.
-          </p>
+          </p> */}
 
           {/* Divider */}
           {/* <div className="relative mb-6 text-center">
@@ -238,9 +238,6 @@ function RegisterPage() {
 
           {/* Footer */}
           <div className="mt-auto flex flex-col items-center gap-2.5 pt-6">
-            <span className="cursor-pointer self-start text-xs text-gray-400 hover:underline">
-              Cookie preferences
-            </span>
             <p className="m-0 text-sm text-gray-500">
               Already have an account?{' '}
               <a

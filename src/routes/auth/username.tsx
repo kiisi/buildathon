@@ -127,7 +127,7 @@ function UsernamePage() {
                     : 'border-gray-200 focus-within:border-gray-900'
                 }`}
               >
-                <span className="select-none pl-4 text-[0.9rem] text-gray-400">linkgrove.ee/</span>
+                <span className="select-none pl-4 text-[0.9rem] text-gray-400">linkgroove.vercel.app/</span>
                 <input
                   id="username-input"
                   name="username"

@@ -6,6 +6,7 @@ import { z } from 'zod'
 import { useState } from 'react'
 import connectToDatabase from '../../lib/db'
 import User from '../../models/User'
+import { APP_URL } from '../../lib/constants'
 
 // Interswitch global
 declare global {
@@ -163,7 +164,7 @@ function SelectPlanPage() {
       txn_ref: txnRef,
       amount: 200000, // ₦2,000 in kobo
       currency: 566,  // NGN ISO 4217
-      site_redirect_url: `${window.location.origin}/dashboard`,
+      site_redirect_url: `${APP_URL}/dashboard`,
       // Pass user identity in the hash/cust fields for audit trail
       cust_id: username,
       cust_name: username,
