@@ -1,204 +1,167 @@
-Welcome to your new TanStack Start app! 
+# Linkgrove
 
-# Getting Started
+**Linkgrove** is a modern, customizable link-in-bio platform that enables creators, entrepreneurs, and businesses to share all their important links from a single, beautifully designed page.
 
-To run this application:
+Inspired by the concept of a grove — a connected group of trees — Linkgrove represents a digital ecosystem where multiple links live and grow together in one organized space.
+
+---
+
+## Live Demo
+
+> Deploy URL goes here
+
+---
+
+## Features
+
+- Personalized bio page with custom themes, fonts, and layouts
+- Add and manage unlimited links
+- Real-time live preview of your public page
+- QR Code Generator with customization and DB persistence
+- Link Shortener with click tracking and redirect routing
+- Polls & Feedback — create polls, share them publicly, collect votes
+- Anonymous messaging page per user
+- Pro plan with Interswitch inline checkout and recurring monthly payments
+- Payment history and billing management
+- Account management — update profile, delete account, data sharing toggle
+- Protected dashboard routes with JWT session cookies
+- Public profile page at `/:username`
+- Public poll voting page at `/poll/:pollId`
+
+---
+
+## Tech Stack
+
+- **Framework:** TanStack Start (React, SSR)
+- **Routing:** TanStack Router (file-based)
+- **Database:** MongoDB via Mongoose
+- **Auth:** JWT sessions with `jose`, `bcryptjs`
+- **Payments:** Interswitch Inline Checkout
+- **Image Uploads:** Cloudinary
+- **Styling:** Tailwind CSS v4
+- **State / Data:** TanStack Query
+- **QR Codes:** qrcode.react
+- **Deployment:** Railway
+
+---
+
+## Getting Started
 
 ```bash
 npm install
 npm run dev
 ```
 
-# Building For Production
+### Environment Variables
 
-To build this application for production:
+Create a `.env` file:
+
+```env
+MONGODB_URI=your_mongodb_connection_string
+SESSION_SECRET=your_secret_key
+```
+
+### Build for Production
 
 ```bash
 npm run build
 ```
 
-## Testing
+---
 
-This project uses [Vitest](https://vitest.dev/) for testing. You can run the tests with:
+## Team Contributions
 
-```bash
-npm run test
+### Kiisi — Lead Engineer
+
+Kiisi was responsible for the full technical implementation of the platform from the ground up.
+
+**Authentication & Security**
+- Bootstrapped the codebase with TanStack Start
+- Implemented registration, login, and logout flows using `createServerFn`
+- Built JWT-based session management with `jose` and `bcryptjs`
+- Implemented protected dashboard routes with `beforeLoad` auth guards
+- Fixed TanStack Start import-protection issues with server-only modules
+
+**Dashboard & Core Features**
+- Built the full dashboard layout with sidebar navigation, mobile bottom nav, and plan-aware UI
+- Implemented the links page — add, edit, toggle, delete links with real-time DB sync
+- Built the live preview component (`LivePreview`) that reflects design changes instantly
+- Implemented the design studio — themes, background colors, button styles, typography, profile image upload via Cloudinary
+- Built the QR Code Generator with `qrcode.react`, customization options, and DB persistence
+- Built the Link Shortener with custom aliases, click tracking, and redirect routing at `/s/:code`
+- Built the Polls & Feedback system — create polls, toggle status, delete, copy share links
+
+**Public Pages**
+- Built the public profile page at `/:username` — renders the user's full design, links, and branding
+- Built the public poll voting page at `/poll/:pollId` — live voting, results with progress bars, multi-select support
+
+**Payments & Billing**
+- Integrated Interswitch inline checkout for Pro plan subscription
+- Implemented recurring monthly payment flow with `PaymentHistory` model
+- Built the billing section in account page — upgrade, cancel plan, payment history table
+
+**Account Management**
+- Built the account page — update username, first/last name, email (read-only)
+- Implemented delete account with type-to-confirm modal
+- Implemented data sharing toggle synced to DB
+
+**Onboarding**
+- Built the full onboarding flow — register → username selection (with availability check) → category → plan selection
+- Integrated Interswitch payment on the select-plan onboarding page
+
+**Infrastructure**
+- Set up MongoDB connection with Mongoose models: `User`, `Link`, `ShortLink`, `Poll`, `QrCode`, `Design`, `PaymentHistory`
+- Configured deployment to Railway with Nitro
+
+---
+
+### Emmanuel — Product, Design & Research
+
+Emmanuel contributed to the product direction, design decisions, and non-technical aspects of the project.
+
+**Product Strategy**
+- Defined the product vision and core value proposition for Linkgrove
+- Identified the target audience — creators, entrepreneurs, and businesses
+- Shaped the feature roadmap and prioritized what to build for the hackathon submission
+
+**UI/UX Design**
+- Designed the overall visual identity and brand direction for Linkgrove
+- Defined the color system, typography choices, and component design language
+- Provided design direction for the landing page, auth pages, dashboard, and onboarding flow
+- Reviewed and gave feedback on UI implementations throughout development
+
+**Research**
+- Researched competitor platforms (Linktree, Bento) to identify differentiation opportunities
+- Researched Interswitch payment integration requirements and provided the merchant credentials and API details
+- Researched Cloudinary setup and provided the upload preset configuration
+
+**Content & Documentation**
+- Wrote the project description, tagline, and feature copy
+- Contributed to README documentation and submission materials
+- Coordinated the overall project narrative for judges
+
+---
+
+## Project Structure
+
+```
+src/
+├── components/dashboard/   # Shared dashboard components (Sidebar, LinkCard, LivePreview)
+├── lib/                    # DB connection, session utilities
+├── models/                 # Mongoose models
+├── routes/
+│   ├── auth/               # Login, register, username, OTP
+│   ├── dashboard/          # All dashboard pages
+│   ├── onboarding/         # Category, plan selection, pro trial
+│   ├── poll/               # Public poll voting page
+│   ├── s/                  # Short link redirect
+│   ├── $username.tsx       # Public profile page
+│   └── index.tsx           # Landing page
+└── styles.css
 ```
 
-## Styling
+---
 
-This project uses [Tailwind CSS](https://tailwindcss.com/) for styling.
+## License
 
-### Removing Tailwind CSS
-
-If you prefer not to use Tailwind CSS:
-
-1. Remove the demo pages in `src/routes/demo/`
-2. Replace the Tailwind import in `src/styles.css` with your own styles
-3. Remove `tailwindcss()` from the plugins array in `vite.config.ts`
-4. Uninstall the packages: `npm install @tailwindcss/vite tailwindcss -D`
-
-## Linting & Formatting
-
-
-This project uses [eslint](https://eslint.org/) and [prettier](https://prettier.io/) for linting and formatting. Eslint is configured using [tanstack/eslint-config](https://tanstack.com/config/latest/docs/eslint). The following scripts are available:
-
-```bash
-npm run lint
-npm run format
-npm run check
-```
-
-
-
-## Routing
-
-This project uses [TanStack Router](https://tanstack.com/router) with file-based routing. Routes are managed as files in `src/routes`.
-
-### Adding A Route
-
-To add a new route to your application just add a new file in the `./src/routes` directory.
-
-TanStack will automatically generate the content of the route file for you.
-
-Now that you have two routes you can use a `Link` component to navigate between them.
-
-### Adding Links
-
-To use SPA (Single Page Application) navigation you will need to import the `Link` component from `@tanstack/react-router`.
-
-```tsx
-import { Link } from "@tanstack/react-router";
-```
-
-Then anywhere in your JSX you can use it like so:
-
-```tsx
-<Link to="/about">About</Link>
-```
-
-This will create a link that will navigate to the `/about` route.
-
-More information on the `Link` component can be found in the [Link documentation](https://tanstack.com/router/v1/docs/framework/react/api/router/linkComponent).
-
-### Using A Layout
-
-In the File Based Routing setup the layout is located in `src/routes/__root.tsx`. Anything you add to the root route will appear in all the routes. The route content will appear in the JSX where you render `{children}` in the `shellComponent`.
-
-Here is an example layout that includes a header:
-
-```tsx
-import { HeadContent, Scripts, createRootRoute } from '@tanstack/react-router'
-
-export const Route = createRootRoute({
-  head: () => ({
-    meta: [
-      { charSet: 'utf-8' },
-      { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-      { title: 'My App' },
-    ],
-  }),
-  shellComponent: ({ children }) => (
-    <html lang="en">
-      <head>
-        <HeadContent />
-      </head>
-      <body>
-        <header>
-          <nav>
-            <Link to="/">Home</Link>
-            <Link to="/about">About</Link>
-          </nav>
-        </header>
-        {children}
-        <Scripts />
-      </body>
-    </html>
-  ),
-})
-```
-
-More information on layouts can be found in the [Layouts documentation](https://tanstack.com/router/latest/docs/framework/react/guide/routing-concepts#layouts).
-
-## Server Functions
-
-TanStack Start provides server functions that allow you to write server-side code that seamlessly integrates with your client components.
-
-```tsx
-import { createServerFn } from '@tanstack/react-start'
-
-const getServerTime = createServerFn({
-  method: 'GET',
-}).handler(async () => {
-  return new Date().toISOString()
-})
-
-// Use in a component
-function MyComponent() {
-  const [time, setTime] = useState('')
-  
-  useEffect(() => {
-    getServerTime().then(setTime)
-  }, [])
-  
-  return <div>Server time: {time}</div>
-}
-```
-
-## API Routes
-
-You can create API routes by using the `server` property in your route definitions:
-
-```tsx
-import { createFileRoute } from '@tanstack/react-router'
-import { json } from '@tanstack/react-start'
-
-export const Route = createFileRoute('/api/hello')({
-  server: {
-    handlers: {
-      GET: () => json({ message: 'Hello, World!' }),
-    },
-  },
-})
-```
-
-## Data Fetching
-
-There are multiple ways to fetch data in your application. You can use TanStack Query to fetch data from a server. But you can also use the `loader` functionality built into TanStack Router to load the data for a route before it's rendered.
-
-For example:
-
-```tsx
-import { createFileRoute } from '@tanstack/react-router'
-
-export const Route = createFileRoute('/people')({
-  loader: async () => {
-    const response = await fetch('https://swapi.dev/api/people')
-    return response.json()
-  },
-  component: PeopleComponent,
-})
-
-function PeopleComponent() {
-  const data = Route.useLoaderData()
-  return (
-    <ul>
-      {data.results.map((person) => (
-        <li key={person.name}>{person.name}</li>
-      ))}
-    </ul>
-  )
-}
-```
-
-Loaders simplify your data fetching logic dramatically. Check out more information in the [Loader documentation](https://tanstack.com/router/latest/docs/framework/react/guide/data-loading#loader-parameters).
-
-# Demo files
-
-Files prefixed with `demo` can be safely deleted. They are there to provide a starting point for you to play around with the features you've installed.
-
-# Learn More
-
-You can learn more about all of the offerings from TanStack in the [TanStack documentation](https://tanstack.com).
-
-For TanStack Start specific documentation, visit [TanStack Start](https://tanstack.com/start).
+MIT
